@@ -46,8 +46,8 @@
 /*········· ··········· ´·····························´········································*/
 #define     P_VERMAJOR  "0.--, prototyping"
 #define     P_VERMINOR  "0.2-, start turning into real program"
-#define     P_VERNUM    "0.2a"
-#define     P_VERTXT    "basic actions modeled to check feasibilty (with my current knowledge)"
+#define     P_VERNUM    "0.2b"
+#define     P_VERTXT    "simple add/purge unit tested on stack"
 /*········· ··········· ´·····························´········································*/
 #define     P_PRIORITY  "direct, simple, brief, vigorous, and lucid (h.w. fowler)"
 #define     P_PRINCIPAL "[grow a set] and build your wings on the way down (r. bradbury)"
@@ -56,9 +56,16 @@
 /*--------- 12345678901 ´123456789-123456789-123456789-123456789-123456789-123456789-123456789-*/
 /*                      ´·········1·········2·········3·········4·········5·········6·········7*/
 /*===[[ HEADER END ]]=========================================================*/
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+
+
+
+#include    <stdio.h>
+#include    <stdlib.h>
+#include    <string.h>
+
+#include    <yLOG.h>
+#include    <yURG.h>
+#include    <ySTR.h>
 
 #include    <X11/X.h>        /* X11     standard overall file                 */
 #include    <X11/Xlib.h>     /* X11     standard C API                        */
@@ -66,6 +73,50 @@
 
 #include    <yX11.h>
 
+
+
+extern      char        unit_answer [LEN_RECD];
+
+
+
+/*===[[ charybdis_prog.c ]]===================================================*/
+/*--------> ----------------------> ------------------------------------------*/
+/*---(support)--------------*/
+char        PROG_usage              (void);
+char*       PROG_version            (void);
+/*---(preinit)--------------*/
+char        PROG__header            (void);
+char        PROG_urgents            (int a_argc, char *a_argv []);
+/*---(startup)--------------*/
+char        PROG__init              (void);
+char        PROG__args              (int a_argc, char *a_argv []);
+char        PROG__begin             (void);
+char        PROG_startup            (int a_argc, char *a_argv []);
+/*---(wrapup)---------------*/
+char        PROG__end               (void);
+char        PROG_shutdown           (void);
+/*---(done)-----------------*/
+
+
+
+/*===[[ charybdis_stack.c ]]==================================================*/
+/*--------> ----------------------> ------------------------------------------*/
+/*---(program)--------------*/
+char        stack_purge             (void);
+char        stack_init              (void);
+/*---(find)-----------------*/
+short       stack_by_winid          (long a_winid);
+/*---(maintain)-------------*/
+char        stack_add               (char a_type, long a_winid);
+char        stack_resize            (short n, short x, short y, short w, short t);
+char        stack_remove            (int n);
+char        stack_insert            (int n);
+char        stack_restack           (long a_winid, long a_after);
+/*---(report)---------------*/
+char        stack_list              (void);
+/*---(unittest)-------------*/
+char*       stack__unit             (char *a_question, int n);
+/*---(done)-----------------*/
 
 
 
