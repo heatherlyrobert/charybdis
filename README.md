@@ -1,0 +1,2 @@
+# charybdis
+simplistic fluxbox pager
