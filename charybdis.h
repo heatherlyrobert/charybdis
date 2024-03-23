@@ -34,11 +34,11 @@
 #define     P_COMPILER  "gcc 11.3.0"
 #define     P_CODESIZE  "small       ()"
 /*········· ··········· ´·····························´········································*/
-#define     P_DEPSTDC   "stdio,string,signal"
-#define     P_DEPGRAPH  "···"
+#define     P_DEPSTDC   "stdio,string,stdlib"
+#define     P_DEPGRAPH  "X11"
 #define     P_DEPCORE   "yURG,yLOG,ySTR"
 #define     P_DEPVIKEYS ""
-#define     P_DEPOTHER  ""
+#define     P_DEPOTHER  "yX11"
 #define     P_DEPSOLO   "···"
 /*········· ··········· ´·····························´········································*/
 #define     P_AUTHOR    "heatherlyrobert"
@@ -46,8 +46,8 @@
 /*········· ··········· ´·····························´········································*/
 #define     P_VERMAJOR  "0.--, prototyping"
 #define     P_VERMINOR  "0.2-, start turning into real program"
-#define     P_VERNUM    "0.2b"
-#define     P_VERTXT    "simple add/purge unit tested on stack"
+#define     P_VERNUM    "0.2c"
+#define     P_VERTXT    "unit tested insert, remove, and copy in stack"
 /*········· ··········· ´·····························´········································*/
 #define     P_PRIORITY  "direct, simple, brief, vigorous, and lucid (h.w. fowler)"
 #define     P_PRINCIPAL "[grow a set] and build your wings on the way down (r. bradbury)"
@@ -111,10 +111,12 @@ char        stack_add               (char a_type, long a_winid);
 char        stack_resize            (short n, short x, short y, short w, short t);
 char        stack_remove            (int n);
 char        stack_insert            (int n);
+char        stack_copy              (int a_from, int a_to);
 char        stack_restack           (long a_winid, long a_after);
 /*---(report)---------------*/
 char        stack_list              (void);
 /*---(unittest)-------------*/
+char        stack__unit_location    (short n, short x, short y, short w, short t);
 char*       stack__unit             (char *a_question, int n);
 /*---(done)-----------------*/
 
