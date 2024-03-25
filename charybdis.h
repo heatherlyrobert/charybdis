@@ -38,7 +38,7 @@
 #define     P_DEPGRAPH  "X11"
 #define     P_DEPCORE   "yURG,yLOG,ySTR"
 #define     P_DEPVIKEYS ""
-#define     P_DEPOTHER  "yX11"
+#define     P_DEPOTHER  "yX11,yEXEC"
 #define     P_DEPSOLO   "···"
 /*········· ··········· ´·····························´········································*/
 #define     P_AUTHOR    "heatherlyrobert"
@@ -46,8 +46,8 @@
 /*········· ··········· ´·····························´········································*/
 #define     P_VERMAJOR  "0.--, prototyping"
 #define     P_VERMINOR  "0.2-, start turning into real program"
-#define     P_VERNUM    "0.2c"
-#define     P_VERTXT    "unit tested insert, remove, and copy in stack"
+#define     P_VERNUM    "0.2d"
+#define     P_VERTXT    "added full data structure from theia"
 /*········· ··········· ´·····························´········································*/
 #define     P_PRIORITY  "direct, simple, brief, vigorous, and lucid (h.w. fowler)"
 #define     P_PRINCIPAL "[grow a set] and build your wings on the way down (r. bradbury)"
@@ -69,8 +69,10 @@
 
 #include    <X11/X.h>        /* X11     standard overall file                 */
 #include    <X11/Xlib.h>     /* X11     standard C API                        */
+#include    <X11/Xatom.h>
 
 
+#include    <yEXEC.h>        /* CUSTOM : heatherly process execution          */
 #include    <yX11.h>
 
 
@@ -106,19 +108,27 @@ char        stack_purge             (void);
 char        stack_init              (void);
 /*---(find)-----------------*/
 short       stack_by_winid          (long a_winid);
+char*       stack_pretty            (long a_winid);
 /*---(maintain)-------------*/
 char        stack_add               (char a_type, long a_winid);
-char        stack_resize            (short n, short x, short y, short w, short t);
-char        stack_remove            (int n);
-char        stack_insert            (int n);
-char        stack_copy              (int a_from, int a_to);
+char        stack_remove            (short n);
+char        stack__insert           (short n);
+char        stack__copy             (short a_from, short a_to);
+char        stack_push_top          (long a_winid, long a_frame);
 char        stack_restack           (long a_winid, long a_after);
+char        stack_resize            (long a_winid, short x, short y, short w, short t);
+char        stack_redesk            (long a_winid, char d);
 /*---(report)---------------*/
 char        stack_list              (void);
+char*       stack_line              (char a_type, short n);
 /*---(unittest)-------------*/
 char        stack__unit_location    (short n, short x, short y, short w, short t);
 char*       stack__unit             (char *a_question, int n);
 /*---(done)-----------------*/
+
+
+
+char        get_property            (long a_winid, char a_type, long *r_value, char r_string [LEN_FULL]);
 
 
 
