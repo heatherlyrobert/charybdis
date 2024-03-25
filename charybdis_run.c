@@ -1,4 +1,4 @@
-
+#include "charybdis.h"
 
 /*> char                                                                                                                                                                                                                                                             <* 
  *> RUN_write             (cchar a_name [LEN_PATH])                                                                                                                                                                                                                  <* 

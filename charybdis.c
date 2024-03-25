@@ -220,11 +220,6 @@ stack_populate          (char a_lvl, long a_parent)
    int         x, y, j;
    uint        w, t;
    long        x_long;
-   char        x_title     [LEN_FULL]  = "";
-   int         x_lvl       =    0;
-   int         x_use       =    0;
-   char        x_pubname   [LEN_LABEL] = "";
-   char        x_cmdline   [LEN_RECD]  = "";
    for (i = 0; i < a_lvl; ++i)  strcat (x_pre, "   ");
    rc = XQueryTree (YX_DISP, a_parent, &x_root, &x_parent, &x_1sts, &x_n1st);
    for (x_1st = 0; x_1st < x_n1st; ++x_1st) {
@@ -241,13 +236,6 @@ stack_populate          (char a_lvl, long a_parent)
             XGetGeometry (YX_DISP, a_parent, &x_long, &j, &j, &w, &t, &j, &j);
             XTranslateCoordinates (YX_DISP, a_parent, x_long, j, j, &x, &y, &x_long);
             stack_resize (x_curr, x, y, w, t);
-            get_property (x_curr, 't', NULL, x_title);
-            printf ("%-10x  %-45.45s\n", x_curr, x_title);
-            rc = yEXEC_find_eterm_use (x_curr, &x_lvl, &x_use, x_pubname, x_cmdline);
-            printf ("   %d\n", x_lvl);
-            printf ("   %d\n", x_use);
-            printf ("   %-45.45s\n", x_pubname);
-            printf ("   %-45.45s\n", x_cmdline);
          }
       }
       stack_populate (a_lvl + 1, x_curr);
@@ -256,3 +244,21 @@ stack_populate          (char a_lvl, long a_parent)
    return 0;
 }
 
+char
+get_context             (long a_winid, short a_eterm)
+{
+   char        rc          =    0;
+   char        x_title     [LEN_FULL]  = "";
+   int         x_lvl       =    0;
+   int         x_use       =    0;
+   char        x_pubname   [LEN_LABEL] = "";
+   char        x_cmdline   [LEN_RECD]  = "";
+   rc = get_property (a_winid, 't', NULL, x_title);
+   /*> printf ("%-10x  %-45.45s\n", x_curr, x_title);                        <*/
+   rc = yEXEC_find_eterm_use (a_eterm, &x_lvl, &x_use, x_pubname, x_cmdline);
+   printf ("   %d\n", x_lvl);
+   printf ("   %d\n", x_use);
+   printf ("   %-45.45s\n", x_pubname);
+   printf ("   %-45.45s\n", x_cmdline);
+   return 0;
+}

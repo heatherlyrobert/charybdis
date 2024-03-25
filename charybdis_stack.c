@@ -15,6 +15,7 @@ struct {
    char        r_title     [LEN_HUND];      /* current window title           */
    /*---(context)-----------*/
    short       r_rpid;                      /* bottom level pid running       */
+   char        r_lvl;                       /* levels of process below eterm  */
    char        r_pubname   [LEN_LABEL];
    char        r_cmdline   [LEN_RECD];
    char        r_type;                      /* window use based on title      */
@@ -65,6 +66,9 @@ stack__clear            (short n)
    s_stack [n].r_topp     = -1;
    s_stack [n].r_wide     = -1;
    s_stack [n].r_tall     = -1;
+   s_stack [n].r_locn     = '·';
+   s_stack [n].r_scrn     = '·';
+   s_stack [n].r_size     = '·';
    /*---(done)--------------*/
    return 0;
 }
@@ -436,6 +440,7 @@ stack_resize            (long a_winid, short x, short y, short w, short t)
    s_stack [n].r_topp  = y;
    s_stack [n].r_wide  = w;
    s_stack [n].r_tall  = t;
+   yX11_loc_categorize (x, y, w, t, &(s_stack [n].r_locn), &(s_stack [n].r_scrn), &(s_stack [n].r_size));
    /*> printf ("resize  %-10.10s  %4dx, %4dy, %4dw, %4dh\n", s_stack [n].r_pretty, s_stack [n].r_left, s_stack [n].r_topp, s_stack [n].r_wide, s_stack [n].r_tall);   <*/
    return 0;
 }
@@ -453,6 +458,86 @@ stack_redesk            (long a_winid, char d)
    return 0;
 }
 
+char
+stack_eterm             (short a_rpid, short a_ppid, long a_window)
+{
+   short       n           =    0;
+   /*---(header)-------------------------*/
+   DEBUG_PROG  yLOG_enter   (__FUNCTION__);
+   DEBUG_PROG  yLOG_value   ("a_rpid"    , a_rpid);
+   DEBUG_PROG  yLOG_value   ("a_ppid"    , a_ppid);
+   DEBUG_PROG  yLOG_value   ("a_window"  , a_window);
+   n = stack_by_winid (a_window);
+   DEBUG_PROG  yLOG_value   ("n"         , n);
+   if (n < 0) {
+      DEBUG_PROG  yLOG_exit    (__FUNCTION__);
+      return 0;
+   }
+   DEBUG_PROG  yLOG_value   ("r_rpid"    , s_stack [n].r_rpid);
+   if (s_stack [n].r_rpid  >  0) {
+      DEBUG_PROG  yLOG_exit    (__FUNCTION__);
+      return 0;
+   }
+   s_stack [n].r_rpid  = a_rpid;
+   s_stack [n].r_eterm = a_ppid;
+   DEBUG_PROG  yLOG_value   ("r_rpid"    , s_stack [n].r_rpid);
+   /*---(complete)-----------------------*/
+   DEBUG_PROG  yLOG_exit    (__FUNCTION__);
+   return 1;
+}
+
+char
+stack_theia             (long a_winid, short a_eterm, char a_back [LEN_TERSE], char a_fore [LEN_TERSE])
+{
+   /*---(locals)-----------+-----+-----+-*/
+   char        rce         =  -10;
+   short       n           =    0;
+   /*---(header)-------------------------*/
+   DEBUG_PROG  yLOG_enter   (__FUNCTION__);
+   DEBUG_PROG  yLOG_value   ("a_winid"   , a_winid);
+   n = stack_by_winid (a_winid);
+   DEBUG_PROG  yLOG_value   ("n"         , n);
+   --rce;  if (n < 0) {
+      DEBUG_PROG  yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   DEBUG_PROG  yLOG_note    ("match found");
+   /*---(verify)-------------------------*/
+   --rce;  if (s_stack [n].r_eterm <= 0) {
+      DEBUG_PROG  yLOG_note    ("adding eterm data");
+   } else if (a_eterm == s_stack [n].r_eterm) {
+      DEBUG_PROG  yLOG_note    ("already have right eterm");
+   } else {
+      DEBUG_PROG  yLOG_note    ("differing eterms, serious issue");
+      DEBUG_PROG  yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   /*---(save-back)----------------------*/
+   s_stack [n].r_eterm = a_eterm;
+   ystrlcpy (s_stack [n].r_back, a_back, LEN_TERSE);
+   ystrlcpy (s_stack [n].r_fore, a_fore, LEN_TERSE);
+   /*---(complete)-----------------------*/
+   DEBUG_PROG  yLOG_exit    (__FUNCTION__);
+   return 1;
+}
+
+char
+stack_context           (void)
+{
+   char        rc          =    0;
+   int         i           =    0;
+   int         x_lvl       =    0;
+   int         x_use       =    0;
+   for (i = 0; i < s_nstack; ++i) {
+      rc = get_property (s_stack [i].r_winid, 't', NULL, s_stack [i].r_title);
+      rc = yEXEC_find_eterm_use (s_stack [i].r_eterm, &x_lvl, &x_use, s_stack [i].r_pubname, s_stack [i].r_cmdline);
+      s_stack [i].r_lvl  = x_lvl;
+      s_stack [i].r_rpid = x_use;
+      printf ("context  %-9.9s  %-45.45s, %3d, %5d, %-20.20s\n", s_stack [i].r_pretty, s_stack [i].r_title, x_lvl, x_use, s_stack [i].r_pubname);
+      s_stack [i].r_type = THEIA_classify (s_stack [i].r_title, s_stack [i].r_pubname, s_stack [i].r_cmdline, s_stack [i].r_terse);
+   }
+   return 0;
+}
 
 
 /*====================------------------------------------====================*/
@@ -486,8 +571,9 @@ char
 stack_list              (void)
 {
    int         i           =    0;
+   printf ("cnt ht  --winid--  -fram-  -d ---x ---y ---w ---t  - - -  eterm  bg--- fg  -run- ---use------ t ---terse-------\n");
    for (i = 0; i < s_nstack; ++i) {
-      printf ("%3d  %-10.10s  %-10.10x  %2dd, %4dx %4dy %4dw %4dt\n", i, s_stack [i].r_pretty, s_stack [i].r_frame, s_stack [i].r_desk, s_stack [i].r_left, s_stack [i].r_topp, s_stack [i].r_wide, s_stack [i].r_tall);
+      printf ("%3d %-2.2s  %-9.9s  %-6.6x  %2d %4d %4d %4d %4d  %c %c %c  %5d  %-5.5s %-2.2s  %5d %-12.12s %c %-15.15s\n", i, s_stack [i].r_hint, s_stack [i].r_pretty, s_stack [i].r_frame, s_stack [i].r_desk, s_stack [i].r_left, s_stack [i].r_topp, s_stack [i].r_wide, s_stack [i].r_tall, s_stack [i].r_locn, s_stack [i].r_scrn, s_stack [i].r_size, s_stack [i].r_eterm, s_stack [i].r_back, s_stack [i].r_fore, s_stack [i].r_rpid, s_stack [i].r_pubname, s_stack [i].r_type, s_stack [i].r_terse);
    }
    return 0;
 }
@@ -502,12 +588,14 @@ static void      o___UNITTEST___________o (void) {;}
 char        unit_answer [LEN_RECD];
 
 char
-stack__unit_location    (short n, short x, short y, short w, short t)
+stack__unit_location    (short n, char d, short x, short y, short w, short t)
 {
+   s_stack [n].r_desk  = d;
    s_stack [n].r_left  = x;
    s_stack [n].r_topp  = y;
    s_stack [n].r_wide  = w;
    s_stack [n].r_tall  = t;
+   yX11_loc_categorize (x, y, w, t, &(s_stack [n].r_locn), &(s_stack [n].r_scrn), &(s_stack [n].r_size));
    return 0;
 }
 
@@ -524,11 +612,11 @@ stack__unit             (char *a_question, int n)
    }
    else if (strcmp (a_question, "entry"   )        == 0) {
       if (n >= s_nstack) {
-         snprintf (unit_answer, LEN_HUND, "STACK entry (%2d) : ··········  ··········     ·x    ·y    ·w    ·t  ·", n);
+         snprintf (unit_answer, LEN_HUND, "STACK entry (%2d) : ··········  ··········   ·d    ·x    ·y    ·w    ·t  · · ·  ·", n);
       } else if (s_stack [n].r_winid < 0) {
-         snprintf (unit_answer, LEN_HUND, "STACK entry (%2d) : ··········  ··········     ·x    ·y    ·w    ·t  ·", n);
+         snprintf (unit_answer, LEN_HUND, "STACK entry (%2d) : ··········  ··········   ·d    ·x    ·y    ·w    ·t  · · ·  ·", n);
       } else {
-         snprintf (unit_answer, LEN_HUND, "STACK entry (%2d) : %10x  %10x  %4dx %4dy %4dw %4dt  %s", n, s_stack [n].r_winid, s_stack [n].r_frame, s_stack [n].r_left, s_stack [n].r_topp, s_stack [n].r_wide, s_stack [n].r_tall, s_stack [n].r_pretty);
+         snprintf (unit_answer, LEN_HUND, "STACK entry (%2d) : %10x  %10x  %2dd %4dx %4dy %4dw %4dt  %c %c %c  %s", n, s_stack [n].r_winid, s_stack [n].r_frame, s_stack [n].r_desk, s_stack [n].r_left, s_stack [n].r_topp, s_stack [n].r_wide, s_stack [n].r_tall, s_stack [n].r_locn, s_stack [n].r_scrn, s_stack [n].r_size, s_stack [n].r_pretty);
       }
    }
    /*---(complete)-----------------------*/

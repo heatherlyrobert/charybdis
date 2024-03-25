@@ -46,8 +46,8 @@
 /*········· ··········· ´·····························´········································*/
 #define     P_VERMAJOR  "0.--, prototyping"
 #define     P_VERMINOR  "0.2-, start turning into real program"
-#define     P_VERNUM    "0.2d"
-#define     P_VERTXT    "added full data structure from theia"
+#define     P_VERNUM    "0.2e"
+#define     P_VERTXT    "pulls/joins theia data and integrates some theia functions"
 /*········· ··········· ´·····························´········································*/
 #define     P_PRIORITY  "direct, simple, brief, vigorous, and lucid (h.w. fowler)"
 #define     P_PRINCIPAL "[grow a set] and build your wings on the way down (r. bradbury)"
@@ -72,9 +72,11 @@
 #include    <X11/Xatom.h>
 
 
+#include    <yPARSE.h>
 #include    <yEXEC.h>        /* CUSTOM : heatherly process execution          */
 #include    <yX11.h>
 
+#define     FILE_THEIA    "/run/theia.ttys"
 
 
 extern      char        unit_answer [LEN_RECD];
@@ -118,18 +120,26 @@ char        stack_push_top          (long a_winid, long a_frame);
 char        stack_restack           (long a_winid, long a_after);
 char        stack_resize            (long a_winid, short x, short y, short w, short t);
 char        stack_redesk            (long a_winid, char d);
+char        stack_eterm             (short a_rpid, short a_ppid, long a_window);
+char        stack_theia             (long a_winid, short a_eterm, char a_back [LEN_TERSE], char a_fore [LEN_TERSE]);
+char        stack_context           (void);
 /*---(report)---------------*/
 char        stack_list              (void);
 char*       stack_line              (char a_type, short n);
 /*---(unittest)-------------*/
-char        stack__unit_location    (short n, short x, short y, short w, short t);
+char        stack__unit_location    (short n, char d, short x, short y, short w, short t);
 char*       stack__unit             (char *a_question, int n);
 /*---(done)-----------------*/
 
 
 
 char        get_property            (long a_winid, char a_type, long *r_value, char r_string [LEN_FULL]);
+char        get_context             (long a_winid, short a_eterm);
 
+char        THEIA_init              (void);
+char        THEIA__handler          (int n, uchar a_verb [LEN_TERSE], char a_exist, void *a_handler);
+char        THEIA_pull              (cchar a_file [LEN_PATH]);
+char        THEIA_classify          (cchar a_title [LEN_HUND], cchar a_pubname [LEN_LABEL], cchar a_cmdline [LEN_RECD], char r_note [LEN_LABEL]);
 
 
 #endif

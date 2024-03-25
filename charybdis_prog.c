@@ -116,6 +116,7 @@ PROG__init              (void)
    DEBUG_PROG   yLOG_enter  (__FUNCTION__);
    /*---(-------)------------------------*/
    stack_purge ();
+   THEIA_init  ();
    /*---(complete)-----------------------*/
    DEBUG_PROG   yLOG_exit   (__FUNCTION__);
    return 0;

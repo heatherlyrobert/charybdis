@@ -46,6 +46,11 @@ main               (int a_argc, char *a_argv [])
    stack_add      ('y', x_root);
    printf ("added\n");
    stack_populate (0, x_root);
+   printf ("starting windows\n");
+   yEXEC_data_windows (stack_eterm);
+   printf ("done with windows\n");
+   THEIA_pull     (FILE_THEIA);
+   stack_context  ();
    stack_list     ();
    /*---(process)------------------------*/
    XSelectInput(YX_DISP, YX_ROOT, PropertyChangeMask | SubstructureNotifyMask );
