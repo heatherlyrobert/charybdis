@@ -46,8 +46,8 @@
 /*········· ··········· ´·····························´········································*/
 #define     P_VERMAJOR  "0.--, prototyping"
 #define     P_VERMINOR  "0.2-, start turning into real program"
-#define     P_VERNUM    "0.2e"
-#define     P_VERTXT    "pulls/joins theia data and integrates some theia functions"
+#define     P_VERNUM    "0.2f"
+#define     P_VERTXT    "simplistic opengl drawing test (just dots) in place"
 /*········· ··········· ´·····························´········································*/
 #define     P_PRIORITY  "direct, simple, brief, vigorous, and lucid (h.w. fowler)"
 #define     P_PRINCIPAL "[grow a set] and build your wings on the way down (r. bradbury)"
@@ -70,6 +70,8 @@
 #include    <X11/X.h>        /* X11     standard overall file                 */
 #include    <X11/Xlib.h>     /* X11     standard C API                        */
 #include    <X11/Xatom.h>
+#include    <GL/gl.h>        /* OPENGL  standard primary header               */
+#include    <GL/glx.h>       /* OPENGL  standard X11 integration              */
 
 
 #include    <yPARSE.h>
@@ -141,5 +143,7 @@ char        THEIA__handler          (int n, uchar a_verb [LEN_TERSE], char a_exi
 char        THEIA_pull              (cchar a_file [LEN_PATH]);
 char        THEIA_classify          (cchar a_title [LEN_HUND], cchar a_pubname [LEN_LABEL], cchar a_cmdline [LEN_RECD], char r_note [LEN_LABEL]);
 
+char        DRAW_init               (void);
+char        DRAW_main               (short a_left, short a_topp, short a_wide, short a_tall);
 
 #endif

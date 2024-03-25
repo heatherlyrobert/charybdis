@@ -17,6 +17,8 @@ main               (int a_argc, char *a_argv [])
    long                   x_root   =    0;
    long                   v        =    0;
    long                   x_curr   =    0;
+   short                  x_wwide, x_wtall;
+   short                  x_left, x_topp, x_wide, x_tall;
    /*---(preprare)-----------------------*/
    rc = PROG_urgents (a_argc, a_argv );
    DEBUG_PROG   yLOG_value   ("urgents"   , rc);
@@ -33,9 +35,18 @@ main               (int a_argc, char *a_argv [])
       return rce;
    }
    DEBUG_PROG  yLOG_enter   (__FUNCTION__);
+   /*---(window size)--------------------*/
+   x_wtall = 90 * 8 + 40;
+   x_wwide = 265;
+   /*---(window size)--------------------*/
+   x_left  = x_wwide - 90;
+   x_topp  = 20;
+   x_wide  = 90;
+   x_tall  = x_wtall - 40;
    /*---(create)-------------------------*/
-   yX11_start ("charybdis", 265, 90 * 8 + 40, YX_HIDDEN, YX_FIXED, YX_SILENT);
+   yX11_start ("charybdis", x_wwide, x_wtall, YX_HIDDEN, YX_FIXED, YX_SILENT);
    yX11_move  (1097,  4);
+   DRAW_init  ();
    get_property (YX_ROOT, 'D', &v, NULL);
    printf ("%d\n", v);
    get_property (YX_ROOT, 'A', &v, NULL);
@@ -53,6 +64,7 @@ main               (int a_argc, char *a_argv [])
    stack_context  ();
    stack_list     ();
    /*---(process)------------------------*/
+   DRAW_main  (x_left, x_topp, x_wide, x_tall);
    XSelectInput(YX_DISP, YX_ROOT, PropertyChangeMask | SubstructureNotifyMask );
    while (1) {
       XNextEvent(YX_DISP, &YX_EVNT);
@@ -115,6 +127,7 @@ main               (int a_argc, char *a_argv [])
          }
          break;
       }
+      DRAW_main  (x_left, x_topp, x_wide, x_tall);
    }
    /*---(destroy)------------------------*/
    yX11_end   ();
