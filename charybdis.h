@@ -45,9 +45,9 @@
 #define     P_CREATED   "2024, mar"
 /*········· ··········· ´·····························´········································*/
 #define     P_VERMAJOR  "0.--, prototyping"
-#define     P_VERMINOR  "0.2-, start turning into real program"
-#define     P_VERNUM    "0.2f"
-#define     P_VERTXT    "simplistic opengl drawing test (just dots) in place"
+#define     P_VERMINOR  "0.3-, working but a little unpretty ;)"
+#define     P_VERNUM    "0.3a"
+#define     P_VERTXT    "tracks windows right, have a good main loop, visual is workable"
 /*········· ··········· ´·····························´········································*/
 #define     P_PRIORITY  "direct, simple, brief, vigorous, and lucid (h.w. fowler)"
 #define     P_PRINCIPAL "[grow a set] and build your wings on the way down (r. bradbury)"
@@ -62,6 +62,7 @@
 #include    <stdio.h>
 #include    <stdlib.h>
 #include    <string.h>
+#include    <time.h>              /* clibc  time related functions            */
 
 #include    <yLOG.h>
 #include    <yURG.h>
@@ -77,6 +78,9 @@
 #include    <yPARSE.h>
 #include    <yEXEC.h>        /* CUSTOM : heatherly process execution          */
 #include    <yX11.h>
+#include    <yFONT.h>
+
+#include   "yDLST_solo.h"
 
 #define     FILE_THEIA    "/run/theia.ttys"
 
@@ -111,7 +115,11 @@ char        PROG_shutdown           (void);
 char        stack_purge             (void);
 char        stack_init              (void);
 /*---(find)-----------------*/
+short       stack_count             (void);
 short       stack_by_winid          (long a_winid);
+char        stack_by_index          (short a_num, char r_hint [LEN_SHORT], char *r_desk, short *r_left, short *r_topp, short *r_wide, short *r_tall, char r_back [LEN_TERSE], char r_pubname [LEN_LABEL], char r_terse [LEN_LABEL], char *r_type);
+char        stack_by_cursor         (char a_move, char r_hint [LEN_SHORT], char *r_desk, short *r_left, short *r_topp, short *r_wide, short *r_tall, char r_back [LEN_TERSE], char r_pubname [LEN_LABEL], char r_terse [LEN_LABEL], char *r_type);
+long        stack_top_on_desk       (char a_desk);
 char*       stack_pretty            (long a_winid);
 /*---(maintain)-------------*/
 char        stack_add               (char a_type, long a_winid);
@@ -130,6 +138,7 @@ char        stack_list              (void);
 char*       stack_line              (char a_type, short n);
 /*---(unittest)-------------*/
 char        stack__unit_location    (short n, char d, short x, short y, short w, short t);
+char        stack__unit_context     (short n, char a_back [LEN_TERSE], char a_pubname [LEN_LABEL], char a_terse [LEN_LABEL], char a_type);
 char*       stack__unit             (char *a_question, int n);
 /*---(done)-----------------*/
 
@@ -144,6 +153,12 @@ char        THEIA_pull              (cchar a_file [LEN_PATH]);
 char        THEIA_classify          (cchar a_title [LEN_HUND], cchar a_pubname [LEN_LABEL], cchar a_cmdline [LEN_RECD], char r_note [LEN_LABEL]);
 
 char        DRAW_init               (void);
+char        DRAW_wrap               (void);
 char        DRAW_main               (short a_left, short a_topp, short a_wide, short a_tall);
+
+
+char        LOOP_init               (float a_base);
+char        LOOP_beg                (void);
+char        LOOP_end                (void);
 
 #endif

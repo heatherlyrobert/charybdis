@@ -140,6 +140,7 @@ THEIA_classify        (cchar a_title [LEN_HUND], cchar a_pubname [LEN_LABEL], cc
          if (p != NULL)  p [0] = '\0';
          x_type = 'V';
       } else {
+         ystrlcpy (t, "·········", LEN_HUND);
          x_type = 'v';
       }
    }
@@ -169,9 +170,10 @@ THEIA_classify        (cchar a_title [LEN_HUND], cchar a_pubname [LEN_LABEL], cc
       x_type = '-';
    }
    /*---(save-back)----------------*/
-   if (x_type == 'U')  ystrlcat (t, "_unit", LEN_LABEL);
-   if (x_type == 'R')  ystrlcat (t, "_urun", LEN_LABEL);
-   if (x_type == 'L')  ystrlcat (t, "_ulog", LEN_LABEL);
+   if (x_type == 'E')  ystrlcat (t, " (code)", LEN_LABEL);
+   if (x_type == 'U')  ystrlcat (t, " (unit)", LEN_LABEL);
+   if (x_type == 'R')  ystrlcat (t, " (urun)", LEN_LABEL);
+   if (x_type == 'L')  ystrlcat (t, " (ulog)", LEN_LABEL);
    ystrlcpy (r_note, t, LEN_LABEL);
    /*---(return)-------------------*/
    return x_type;
