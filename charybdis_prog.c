@@ -2,6 +2,9 @@
 
 
 
+char        g_layout  = 'p';
+
+
 /*====================------------------------------------====================*/
 /*===----                        program wide                          ----===*/
 /*====================------------------------------------====================*/
@@ -31,6 +34,46 @@ PROG_version            (void)
 #endif
    snprintf (verstring, LEN_HUND, "%s   %s : %s", t, P_VERNUM, P_VERTXT);
    return verstring;
+}
+
+void             /* [------] receive signals ---------------------------------*/
+PROG_comm          (int a_signal, siginfo_t *a_info, char *a_name, char *a_desc)
+{
+   /*---(catch)--------------------------*/
+   switch (a_signal) {
+   case  SIGHUP:
+      DEBUG_PROG  yLOG_info     ("SIGNAL", "SIGHUP MEANS REFRESH");
+      g_layout = 't';
+      DRAW_sizing (g_layout);
+      break;
+   case  SIGUSR1:
+      DEBUG_PROG  yLOG_info     ("SIGNAL", "SIGUSR1 MEANS ...");
+      g_layout = 'p';
+      DRAW_sizing (g_layout);
+      break;
+   case  SIGUSR2:
+      DEBUG_PROG  yLOG_info     ("SIGNAL", "SIGUSR2 MEANS ...");
+      g_layout = 'f';
+      DRAW_sizing (g_layout);
+      break;
+   case  SIGALRM:
+      DEBUG_PROG  yLOG_info     ("SIGNAL", "SIGALRM MEANS ...");
+      break;
+   case  SIGTERM:
+      DEBUG_PROG  yLOG_info     ("SIGNAL", "SIGTERM means terminate daemon");
+      break;
+   case  SIGSEGV:
+      DEBUG_PROG  yLOG_info     ("SIGNAL", "SIGSEGV means daemon blew up");
+      break;
+   case  SIGABRT:
+      DEBUG_PROG  yLOG_info     ("SIGNAL", "SIGABRT means daemon blew up");
+      break;
+   default      :
+      DEBUG_PROG  yLOG_info     ("SIGNAL", "unknown signal recieved");
+      break;
+   }
+   /*---(complete)-----------------------*/
+   return;
 }
 
 
@@ -115,8 +158,17 @@ PROG__init              (void)
    /*---(logger)-------------------------*/
    DEBUG_PROG   yLOG_enter  (__FUNCTION__);
    /*---(-------)------------------------*/
-   stack_purge ();
+   STACK_init  ();
    THEIA_init  ();
+   /*---(signals)-------------------------------*/
+   yEXEC_signal (YEXEC_SOFT, YEXEC_YES, YEXEC_NO, PROG_comm, "stdsig");
+   DEBUG_ENVI   yLOG_value   ("signals"   , rc);
+   --rce;  if (rc < 0) {
+      /*> printf ("hestia sigals could not be set properly\n");                       <*/
+      DEBUG_ENVI   yLOG_note    ("hestia signals cound not be set properly");
+      DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
    /*---(complete)-----------------------*/
    DEBUG_PROG   yLOG_exit   (__FUNCTION__);
    return 0;
@@ -151,35 +203,10 @@ PROG__args              (int a_argc, char *a_argv [])
       }
       else if (strcmp (a, "--usage"       ) == 0) { PROG_usage ();  return -1; }
       /*---(overall)---------------------*/
-      /*> else if (strcmp (a, "--vcheck"      ) == 0)  my.audit    = 'y';             <* 
-       *> else if (strcmp (a, "--base_only"   ) == 0)  my.scope    = '-';             <* 
-       *> else if (strcmp (a, "--vars_also"   ) == 0)  my.scope    = 'v';             <* 
-       *> else if (strcmp (a, "--extended"    ) == 0)  my.scope    = '+';             <* 
-       *> else if (strcmp (a, "--heads"       ) == 0)  my.heads    = 'y';             <*/
-      /*---(variants)--------------------*/
-      /*> else if (strcmp (a, "--vshort"      ) == 0)  my.variants = 's';             <* *> else if (strcmp (a, "--vfull"       ) == 0)  my.variants = 'f';             <*/
-      /*---(ornamentation)---------------*/
-      /*> else if (strcmp (a, "--base"        ) == 0)  my.ornament = YASCII_BASE;      <* 
-       *> else if (strcmp (a, "--hints"       ) == 0)  my.ornament = YASCII_HINTS;     <* 
-       *> else if (strcmp (a, "--tsae"        ) == 0)  my.ornament = YASCII_TSAE;      <* 
-       *> else if (strcmp (a, "--full"        ) == 0)  my.ornament = YASCII_FULL;      <* 
-       *> else if (strcmp (a, "--english"     ) == 0)  my.ornament = YASCII_ENGLISH;   <* 
-       *> else if (strcmp (a, "--icing"       ) == 0)  my.ornament = YASCII_ICING;     <* 
-       *> else if (strcmp (a, "--diagram"     ) == 0)  my.ornament = YASCII_DIAGRAM;   <*/
-      /*---(gapping)---------------------*/
-      /*> else if (strcmp (a, "--nogap"       ) == 0)  my.gapping  = YASCII_NOGAP;     <* 
-       *> else if (strcmp (a, "--normgap"     ) == 0)  my.gapping  = YASCII_NORMGAP;   <* 
-       *> else if (strcmp (a, "--evengap"     ) == 0)  my.gapping  = YASCII_EVENGAP;   <*/
-      /*---(drawing)---------------------*/
-      /*> else if (strcmp (a, "--flower"      ) == 0)  my.report   = MAYAN_FLOWER;    <* 
-       *> else if (strcmp (a, "--page"        ) == 0)  my.report   = MAYAN_PAGE;      <* 
-       *> else if (strcmp (a, "--pages"       ) == 0)  my.report   = MAYAN_PAGES;     <* 
-       *> else if (strcmp (a, "--group"       ) == 0)  my.report   = MAYAN_GROUP;     <* 
-       *> else if (strcmp (a, "--list"        ) == 0)  my.report   = MAYAN_LIST;      <* 
-       *> else if (strcmp (a, "--quotes"      ) == 0)  my.report   = MAYAN_QUOTE;     <* 
-       *> else if (strcmp (a, "--detail"      ) == 0)  my.report   = MAYAN_DETAIL;    <* 
-       *> else if (strcmp (a, "--text"        ) == 0)  my.report   = MAYAN_TRANS;     <* 
-       *> else if (strcmp (a, "--freq"        ) == 0)  my.report   = MAYAN_FREQ;      <*/
+      else if (strcmp (a, "--thin"        ) == 0)  g_layout    = 't';
+      else if (strcmp (a, "--pager"       ) == 0)  g_layout    = 'p';
+      else if (strcmp (a, "--full"        ) == 0)  g_layout    = 'f';
+      else if (strcmp (a, "--list"        ) == 0)  g_layout    = '-';
       /*---(trouble)---------------------*/
       else {
          /*> ystrlcpy (my.tsae, a, LEN_RECD);                                         <*/
@@ -244,6 +271,32 @@ PROG_startup            (int a_argc, char *a_argv [])
    yURG_stage_check (YURG_MID);
    return rc;
 }
+
+char
+PROG_single        (void)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   int         rce         =  -10;
+   int         rc          =    0;
+   int         x_running   =    0;
+   int         x_uid       =    0;
+   /*---(header)-------------------------*/
+   DEBUG_ENVI   yLOG_enter   (__FUNCTION__);
+   /*---(check for other)----------------*/
+   x_running  = yEXEC_find ("charybdis", NULL);
+   x_running += yEXEC_find ("charybdis_debug", NULL);
+   DEBUG_ENVI   yLOG_value   ("x_running" , x_running);
+   --rce;  if (x_running > 1) {
+      printf ("charybdis already running in pager mode\n");
+      DEBUG_ENVI   yLOG_note    ("charybdis already running in pager mode");
+      DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   /*---(complete)------------------------------*/
+   DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
+   return 0;
+}
+
 
 
 /*====================------------------------------------====================*/

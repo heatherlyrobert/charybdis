@@ -8,16 +8,16 @@ THEIA_init              (void)
    char        rce         =  -10;
    char        rc          =    0;
    /*---(header)-------------------------*/
-   DEBUG_PROG   yLOG_enter   (__FUNCTION__);
+   DEBUG_CONF   yLOG_enter   (__FUNCTION__);
    /*---(yPARSE)-------------------------*/
    rc = yPARSE_config (YPARSE_MANUAL, NULL, YPARSE_ONETIME, YPARSE_FIELD, YPARSE_FILL);
-   DEBUG_PROG   yLOG_value   ("yparse"    , rc);
+   DEBUG_CONF   yLOG_value   ("yparse"    , rc);
    --rce;  if (rc < 0) {
-      DEBUG_PROG   yLOG_exitr   (__FUNCTION__, rce);
+      DEBUG_CONF   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
    /*---(complete)-----------------------*/
-   DEBUG_PROG   yLOG_exit    (__FUNCTION__);
+   DEBUG_CONF   yLOG_exit    (__FUNCTION__);
    return 0;
 }
 
@@ -39,7 +39,7 @@ THEIA__handler          (int n, uchar a_verb [LEN_TERSE], char a_exist, void *a_
    /*---(dispatch)-----------------------*/
    DEBUG_CONF  yLOG_point   ("a_verb"     , a_verb);
    --rce;  if (a_verb == NULL) {
-      DEBUG_PROG  yLOG_exitr   (__FUNCTION__, rce);
+      DEBUG_CONF  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
    DEBUG_CONF  yLOG_info    ("a_verb"     , a_verb);
@@ -47,7 +47,7 @@ THEIA__handler          (int n, uchar a_verb [LEN_TERSE], char a_exist, void *a_
    rc = yPARSE_scanf (a_verb, "TTT"  , x_back, x_fore, x_winid);
    DEBUG_CONF  yLOG_value   ("scanf"      , rc);
    if (rc < 0) {
-      DEBUG_PROG  yLOG_exitr   (__FUNCTION__, rce);
+      DEBUG_CONF  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
    DEBUG_CONF  yLOG_info    ("x_back"     , x_back);
@@ -60,10 +60,10 @@ THEIA__handler          (int n, uchar a_verb [LEN_TERSE], char a_exist, void *a_
    x_epid   = atoi (a_verb);
    DEBUG_CONF  yLOG_value   ("x_window"   , x_window);
    DEBUG_CONF  yLOG_value   ("x_epid"     , x_epid);
-   rc = stack_theia (x_window, x_epid, x_back, x_fore);
+   rc = STACK_theia (x_window, x_epid, x_back, x_fore);
    DEBUG_CONF  yLOG_value   ("theia"      , rc);
    if (rc < 0) {
-      DEBUG_PROG  yLOG_exitr   (__FUNCTION__, rce);
+      DEBUG_CONF  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
    /*---(complete)-----------------------*/
@@ -83,16 +83,19 @@ THEIA_pull              (cchar a_file [LEN_PATH])
    /*---(purge the tables)---------------*/
    rc = yPARSE_reset_in ();
    DEBUG_CONF   yLOG_value   ("purge_in"  , rc);
+   /*---(re-configure)-------------------*/
+   rc = THEIA_init ();
+   DEBUG_CONF   yLOG_value   ("config"    , rc);
    /*---(defense)------------------------*/
    DEBUG_CONF  yLOG_point   ("a_file"     , a_file);
    --rce;  if (a_file == NULL) {
-      DEBUG_PROG  yLOG_exitr   (__FUNCTION__, rce);
+      DEBUG_CONF  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
    DEBUG_CONF  yLOG_info    ("a_file"     , a_file);
    /*---(read all lines)-----------------*/
    rc = yPARSE_autoread (a_file, NULL, THEIA__handler);
-   DEBUG_PROG  yLOG_value   ("read"      , rc);
+   DEBUG_CONF  yLOG_value   ("read"      , rc);
    /*---(close)--------------------------*/
    rc = yPARSE_close ();
    DEBUG_CONF   yLOG_value   ("close"     , rc);
@@ -102,7 +105,7 @@ THEIA_pull              (cchar a_file [LEN_PATH])
       return rce;
    }
    /*---(complete)-----------------------*/
-   DEBUG_INPT  yLOG_exit    (__FUNCTION__);
+   DEBUG_CONF  yLOG_exit    (__FUNCTION__);
    return 0;
 }
 

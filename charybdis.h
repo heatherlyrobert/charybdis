@@ -15,7 +15,7 @@
 #define     P_PURPOSE   "provide real-time window location and stacking data"
 /*········· ··········· ´·····························´········································*/
 #define     P_NAMESAKE  "charybdis-adialeiptos (unceasing)"
-#define     P_PRONOUNCE ""
+#define     P_PRONOUNCE "kaa·rihb·dihs"
 #define     P_HERITAGE  "sea-swallowing, ship-killing whirlpool in the straits of messina"
 #define     P_BRIEFLY   "ship-killing whirlpool"
 #define     P_IMAGERY   "gigantic sucking vortex of water surrounded by a ring of sharp teeth"
@@ -46,8 +46,8 @@
 /*········· ··········· ´·····························´········································*/
 #define     P_VERMAJOR  "0.--, prototyping"
 #define     P_VERMINOR  "0.3-, working but a little unpretty ;)"
-#define     P_VERNUM    "0.3a"
-#define     P_VERTXT    "tracks windows right, have a good main loop, visual is workable"
+#define     P_VERNUM    "0.3b"
+#define     P_VERTXT    "supports thin, pager, and full views through signals"
 /*········· ··········· ´·····························´········································*/
 #define     P_PRIORITY  "direct, simple, brief, vigorous, and lucid (h.w. fowler)"
 #define     P_PRINCIPAL "[grow a set] and build your wings on the way down (r. bradbury)"
@@ -63,6 +63,7 @@
 #include    <stdlib.h>
 #include    <string.h>
 #include    <time.h>              /* clibc  time related functions            */
+#include    <signal.h>              /* ANSI-C    signal handling              */
 
 #include    <yLOG.h>
 #include    <yURG.h>
@@ -82,10 +83,13 @@
 
 #include   "yDLST_solo.h"
 
-#define     FILE_THEIA    "/run/theia.ttys"
+
+#define     FILE_THEIA      "/run/theia.ttys"
+#define     FILE_CHARYBDIS  "/run/charybdis.ttys"
 
 
 extern      char        unit_answer [LEN_RECD];
+extern      char        g_layout;
 
 
 
@@ -112,53 +116,81 @@ char        PROG_shutdown           (void);
 /*===[[ charybdis_stack.c ]]==================================================*/
 /*--------> ----------------------> ------------------------------------------*/
 /*---(program)--------------*/
-char        stack_purge             (void);
-char        stack_init              (void);
+char        STACK_purge             (void);
+char        STACK_init              (void);
 /*---(find)-----------------*/
-short       stack_count             (void);
-short       stack_by_winid          (long a_winid);
-char        stack_by_index          (short a_num, char r_hint [LEN_SHORT], char *r_desk, short *r_left, short *r_topp, short *r_wide, short *r_tall, char r_back [LEN_TERSE], char r_pubname [LEN_LABEL], char r_terse [LEN_LABEL], char *r_type);
-char        stack_by_cursor         (char a_move, char r_hint [LEN_SHORT], char *r_desk, short *r_left, short *r_topp, short *r_wide, short *r_tall, char r_back [LEN_TERSE], char r_pubname [LEN_LABEL], char r_terse [LEN_LABEL], char *r_type);
-long        stack_top_on_desk       (char a_desk);
-char*       stack_pretty            (long a_winid);
+short       STACK_count             (void);
+short       STACK_by_winid          (long a_winid);
+char        STACK_by_index          (short a_num, char r_hint [LEN_SHORT], char *r_desk, short *r_left, short *r_topp, short *r_wide, short *r_tall, char r_back [LEN_TERSE], char r_pubname [LEN_LABEL], char r_terse [LEN_LABEL], char *r_type);
+char        STACK_by_cursor         (char a_move, char r_hint [LEN_SHORT], char *r_desk, short *r_left, short *r_topp, short *r_wide, short *r_tall, char r_back [LEN_TERSE], char r_pubname [LEN_LABEL], char r_terse [LEN_LABEL], char *r_type);
+char*       STACK_pretty            (long a_winid);
 /*---(maintain)-------------*/
-char        stack_add               (char a_type, long a_winid);
-char        stack_remove            (short n);
-char        stack__insert           (short n);
-char        stack__copy             (short a_from, short a_to);
-char        stack_push_top          (long a_winid, long a_frame);
-char        stack_restack           (long a_winid, long a_after);
-char        stack_resize            (long a_winid, short x, short y, short w, short t);
-char        stack_redesk            (long a_winid, char d);
-char        stack_eterm             (short a_rpid, short a_ppid, long a_window);
-char        stack_theia             (long a_winid, short a_eterm, char a_back [LEN_TERSE], char a_fore [LEN_TERSE]);
-char        stack_context           (void);
+char        STACK_remove            (short n);
+char        STACK__insert           (short n);
+char        STACK__copy             (short a_from, short a_to);
+char        STACK_add               (char a_type, long a_winid);
+char        STACK_push_top          (long a_winid, long a_frame);
+char        STACK_restack           (long a_winid, long a_after);
+char        STACK_resize            (long a_winid, short x, short y, short w, short t);
+char        STACK_redesk            (long a_winid, char d);
+char        STACK_eterm             (short a_rpid, short a_ppid, long a_window);
+char        STACK_theia             (long a_winid, short a_eterm, char a_back [LEN_TERSE], char a_fore [LEN_TERSE]);
+char        STACK_context           (long a_winid);
 /*---(report)---------------*/
-char        stack_list              (void);
-char*       stack_line              (char a_type, short n);
+char        STACK_list              (void);
+char*       STACK_line              (char a_type, short n);
+char        STACK_write             (cchar a_name [LEN_PATH]);
 /*---(unittest)-------------*/
-char        stack__unit_location    (short n, char d, short x, short y, short w, short t);
-char        stack__unit_context     (short n, char a_back [LEN_TERSE], char a_pubname [LEN_LABEL], char a_terse [LEN_LABEL], char a_type);
-char*       stack__unit             (char *a_question, int n);
+char        STACK__unit_location    (short n, char d, short x, short y, short w, short t);
+char        STACK__unit_context     (short n, char a_back [LEN_TERSE], char a_pubname [LEN_LABEL], char a_terse [LEN_LABEL], char a_type);
+char*       STACK__unit             (char *a_question, int n);
 /*---(done)-----------------*/
 
 
 
-char        get_property            (long a_winid, char a_type, long *r_value, char r_string [LEN_FULL]);
-char        get_context             (long a_winid, short a_eterm);
+/*===[[ charybdis_get.c ]]====================================================*/
+/*--------> ----------------------> ------------------------------------------*/
+char        GET_property            (long a_winid, char a_type, long *r_value, char r_string [LEN_FULL]);
+char        GET_single              (char a_desk, long a_parent, long a_curr);
+char        GET_populate            (char a_lvl, long a_parent);
+char        GET_update              (long a_root, int a_loop);
+/*---(done)-----------------*/
 
+
+
+/*===[[ charybdis_theia.c ]]==================================================*/
+/*--------> ----------------------> ------------------------------------------*/
 char        THEIA_init              (void);
 char        THEIA__handler          (int n, uchar a_verb [LEN_TERSE], char a_exist, void *a_handler);
 char        THEIA_pull              (cchar a_file [LEN_PATH]);
 char        THEIA_classify          (cchar a_title [LEN_HUND], cchar a_pubname [LEN_LABEL], cchar a_cmdline [LEN_RECD], char r_note [LEN_LABEL]);
+/*---(done)-----------------*/
 
+
+
+/*===[[ charybdis_draw.c ]]===================================================*/
+/*--------> ----------------------> ------------------------------------------*/
 char        DRAW_init               (void);
 char        DRAW_wrap               (void);
-char        DRAW_main               (short a_left, short a_topp, short a_wide, short a_tall);
+char        DRAW_sizing             (char a_layout);
+char        DRAW_windows            (short a_left, short a_topp, short a_wide, short a_tall, short a_gap);
+char        DRAW_context            (short a_left, short a_topp, short a_wide, short a_tall, short a_gap);
+char        DRAW_desktops           (short a_left, short a_topp, short a_wide, short a_tall, short a_gap);
+char        DRAW_pager              (short a_left, short a_topp, short a_wide, short a_tall);
+char        DRAW_launch             (short a_left, short a_topp, short a_wide, short a_tall);
+char        DRAW_main               (char a_layout);
+/*---(done)-----------------*/
 
 
+
+/*===[[ charybdis_draw.c ]]===================================================*/
+/*--------> ----------------------> ------------------------------------------*/
 char        LOOP_init               (float a_base);
 char        LOOP_beg                (void);
 char        LOOP_end                (void);
+/*---(done)-----------------*/
+
+
+
 
 #endif
