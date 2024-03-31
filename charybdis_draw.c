@@ -213,7 +213,7 @@ DRAW_context            (short a_left, short a_topp, short a_wide, short a_tall,
    char        x_dwin      [8] = { 1, 1, 1, 1, 1, 1, 1, 1};
    char        t           [LEN_DESC]  = "";
    short       x_ftopp     =    0;
-   short       x_topp      = 8 * (a_gap + a_tall);
+   short       x_topp, x_bott, x_righ;
    /*---(header)-------------------------*/
    DEBUG_GRAF   yLOG_enter  (__FUNCTION__);
    /*---(get first)----------------------*/
@@ -251,13 +251,35 @@ DRAW_context            (short a_left, short a_topp, short a_wide, short a_tall,
    }
    for (x_desk = 0; x_desk <  8; ++x_desk) {
       x_ftopp = (8 - x_desk) * (a_tall + a_gap) - a_tall / 2.0;
-      glPushMatrix(); {
-         glColor4f (0.00, 0.00, 0.00, 1.00);
-         if (x_dwin [x_desk] > 0)  --(x_dwin [x_desk]);
-         sprintf (t, "%d", x_dwin [x_desk]);
-         glTranslatef  (a_left + a_wide / 2.0, x_ftopp,  600);
-         yFONT_print  (s_font, 16, YF_MIDCEN, t);
-      } glPopMatrix ();
+      if (x_dwin [x_desk] > 0)  --(x_dwin [x_desk]);
+      if (x_dwin [x_desk] > 0) {
+         glPushMatrix(); {
+            glColor4f (0.00, 0.00, 0.00, 1.00);
+            if (x_dwin [x_desk] > 0)  --(x_dwin [x_desk]);
+            sprintf (t, "%d", x_dwin [x_desk]);
+            glTranslatef  (a_left + a_wide / 2.0, x_ftopp,  600);
+            yFONT_print  (s_font, 16, YF_MIDCEN, t);
+         } glPopMatrix ();
+      }
+      if (x_dwin [x_desk] == 0) {
+         x_topp  = (8 - x_desk) * (a_tall + a_gap);
+         x_bott  = x_topp - a_tall;
+         x_righ  = a_left + a_wide;
+         glColor4f (0.20, 0.20, 0.20, 1.00);
+         glBegin         (GL_POLYGON); {
+            glVertex3f  (a_left, x_topp,  400);
+            glVertex3f  (x_righ, x_topp,  400);
+            glVertex3f  (x_righ, x_bott,  400);
+            glVertex3f  (a_left, x_bott,  400);
+         } glEnd   ();
+         /*> glLineWidth    (1.00);                                                   <* 
+          *> glBegin        (GL_LINES); {                                             <* 
+          *>    glVertex3f  (a_left, x_topp,  650);                                   <* 
+          *>    glVertex3f  (x_righ, x_bott,  650);                                   <* 
+          *>    glVertex3f  (x_righ, x_topp,  650);                                   <* 
+          *>    glVertex3f  (a_left, x_bott,  650);                                   <* 
+          *> } glEnd   ();                                                            <*/
+      }
    }
    /*---(complete)-----------------------*/
    DEBUG_GRAF   yLOG_exit   (__FUNCTION__);
