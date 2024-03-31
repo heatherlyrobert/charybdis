@@ -46,8 +46,8 @@
 /*········· ··········· ´·····························´········································*/
 #define     P_VERMAJOR  "0.--, prototyping"
 #define     P_VERMINOR  "0.3-, working but a little unpretty ;)"
-#define     P_VERNUM    "0.3c"
-#define     P_VERTXT    "done with this round, page published on spidersdreaming.com"
+#define     P_VERNUM    "0.3d"
+#define     P_VERTXT    "added destop eterm count to pager view image for each desktop"
 /*········· ··········· ´·····························´········································*/
 #define     P_PRIORITY  "direct, simple, brief, vigorous, and lucid (h.w. fowler)"
 #define     P_PRINCIPAL "[grow a set] and build your wings on the way down (r. bradbury)"

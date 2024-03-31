@@ -108,7 +108,6 @@ DRAW_windows            (short a_left, short a_topp, short a_wide, short a_tall,
    short       n           =    0;
    float       a           = 0.50;
    short       x_top       =    0;
-   char        x_dwin      [8] = { 0, 0, 0, 0, 0, 0, 0, 0};
    char        t           [LEN_DESC]  = "";
    short       x_ftopp     =    0;
    /*---(header)-------------------------*/
@@ -214,6 +213,7 @@ DRAW_context            (short a_left, short a_topp, short a_wide, short a_tall,
    char        x_dwin      [8] = { 1, 1, 1, 1, 1, 1, 1, 1};
    char        t           [LEN_DESC]  = "";
    short       x_ftopp     =    0;
+   short       x_topp      = 8 * (a_gap + a_tall);
    /*---(header)-------------------------*/
    DEBUG_GRAF   yLOG_enter  (__FUNCTION__);
    /*---(get first)----------------------*/
@@ -223,22 +223,24 @@ DRAW_context            (short a_left, short a_topp, short a_wide, short a_tall,
       /*---(calculate top)---------------*/
       x_ftopp = (8 - x_desk) * (a_tall + a_gap) - 10;
       /*---(filter)----------------------*/
-      if (x_left >= 0 && x_desk >= 0 && x_dwin [x_desk] < 7 && x_terse [0] != '·') {
-         /*---(draw)---------------------*/
-         glPushMatrix(); {
-            if (n == 0)      glColor4f (1.00, 1.00, 0.00, 1.00);
-            else             glColor4f (0.00, 0.00, 0.00, 1.00);
-            sprintf (t, "%s %c %-2.2s", x_terse, x_type, x_hint);
-            glTranslatef (a_left -  8, x_ftopp - x_dwin [x_desk] * 12, 0);
-            switch (g_layout) {
-            case 'p' :
-               yFONT_print  (s_font,  8, YF_TOPRIG, t);
-               break;
-            case 'f' :
-               yFONT_print  (s_font,  8, YF_TOPRIG, STACK_line ('-', n));
-               break;
-            }
-         } glPopMatrix ();
+      if (x_left >= 0 && x_desk >= 0 ) {
+         if (g_layout != 't' && x_dwin [x_desk] < 7 && x_terse [0] != '·') {
+            /*---(draw)---------------------*/
+            glPushMatrix(); {
+               if (n == 0)      glColor4f (1.00, 1.00, 0.00, 1.00);
+               else             glColor4f (0.00, 0.00, 0.00, 1.00);
+               sprintf (t, "%s %c %-2.2s", x_terse, x_type, x_hint);
+               glTranslatef (a_left -  8, x_ftopp - x_dwin [x_desk] * 12, 0);
+               switch (g_layout) {
+               case 'p' :
+                  yFONT_print  (s_font,  8, YF_TOPRIG, t);
+                  break;
+               case 'f' :
+                  yFONT_print  (s_font,  8, YF_TOPRIG, STACK_line ('-', n));
+                  break;
+               }
+            } glPopMatrix ();
+         }
          /*---(add to dest)--------------*/
          ++(x_dwin [x_desk]);
       }
@@ -246,6 +248,16 @@ DRAW_context            (short a_left, short a_topp, short a_wide, short a_tall,
       ++n;
       rc = STACK_by_cursor (YDLST_NEXT, x_hint, &x_desk, &x_left, NULL, NULL, NULL, NULL, NULL, x_terse, &x_type);
       /*---(done)------------------------*/
+   }
+   for (x_desk = 0; x_desk <  8; ++x_desk) {
+      x_ftopp = (8 - x_desk) * (a_tall + a_gap) - a_tall / 2.0;
+      glPushMatrix(); {
+         glColor4f (0.00, 0.00, 0.00, 1.00);
+         if (x_dwin [x_desk] > 0)  --(x_dwin [x_desk]);
+         sprintf (t, "%d", x_dwin [x_desk]);
+         glTranslatef  (a_left + a_wide / 2.0, x_ftopp,  600);
+         yFONT_print  (s_font, 16, YF_MIDCEN, t);
+      } glPopMatrix ();
    }
    /*---(complete)-----------------------*/
    DEBUG_GRAF   yLOG_exit   (__FUNCTION__);
@@ -318,6 +330,7 @@ DRAW_pager              (short a_left, short a_topp, short a_wide, short a_tall)
    case 't' :
       DRAW_windows  (    5, a_tall, 80, 90, 4);
       DRAW_desktops (    5, a_tall, 80, 90, 4);
+      DRAW_context  (    5, a_tall, 80, 90, 4);
       break;
    case 'p' :
       DRAW_windows  (  165, a_tall, 80, 90, 4);
