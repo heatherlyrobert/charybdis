@@ -60,13 +60,13 @@ PROG_comm          (int a_signal, siginfo_t *a_info, char *a_name, char *a_desc)
       DEBUG_PROG  yLOG_info     ("SIGNAL", "SIGALRM MEANS ...");
       break;
    case  SIGTERM:
-      DEBUG_PROG  yLOG_info     ("SIGNAL", "SIGTERM means terminate daemon");
+      DEBUG_PROG  yLOG_info     ("SIGNAL", "SIGTERM means terminate");
       break;
    case  SIGSEGV:
-      DEBUG_PROG  yLOG_info     ("SIGNAL", "SIGSEGV means daemon blew up");
+      DEBUG_PROG  yLOG_info     ("SIGNAL", "SIGSEGV means blew up");
       break;
    case  SIGABRT:
-      DEBUG_PROG  yLOG_info     ("SIGNAL", "SIGABRT means daemon blew up");
+      DEBUG_PROG  yLOG_info     ("SIGNAL", "SIGABRT means blew up");
       break;
    default      :
       DEBUG_PROG  yLOG_info     ("SIGNAL", "unknown signal recieved");

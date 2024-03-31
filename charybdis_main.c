@@ -58,26 +58,16 @@ main               (int a_argc, char *a_argv [])
    yEXEC_data_windows (STACK_eterm);
    THEIA_pull     (FILE_THEIA);
    STACK_context  (0);
+   if (g_layout == '-') {
+      STACK_list ();
+      return 0;
+   }
    STACK_write    (FILE_CHARYBDIS);
-   /*> STACK_list     ();                                                             <*/
-   if (g_layout == '-')  return 0;
-   /*---(window size)--------------------*/
-   /*> x_wtall = 90 * 8 + 36;                                                         <* 
-    *> x_wwide = 240;                                                                 <*/
-   /*---(window size)--------------------*/
-   /*> x_wide  = 80;                                                                  <* 
-    *> x_left  = x_wwide - x_wide;                                                    <* 
-    *> x_topp  = 20;                                                                  <* 
-    *> x_tall  = x_wtall - 40;                                                        <*/
-   /*---(create)-------------------------*/
-   /*> yX11_start ("charybdis", x_wwide, x_wtall, YX_HIDDEN, YX_FIXED, YX_SILENT);    <* 
-    *> yX11_move  (1097,  4);                                                         <*/
+   /*---(prepare visual)-----------------*/
    DRAW_sizing (g_layout);
    DRAW_init  ();
    GET_property (YX_ROOT, 'D', &v, NULL);
-   /*> printf ("%d\n", v);                                                            <*/
    GET_property (YX_ROOT, 'A', &v, NULL);
-   /*> printf ("%-10x\n", v);                                                         <*/
    /*---(process)------------------------*/
    /*> DRAW_main  (0, x_wtall, x_wwide, x_wtall);                                     <*/
    DRAW_main  (g_layout);
