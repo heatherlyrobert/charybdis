@@ -10,13 +10,14 @@ static char   s_exist = '-';
 static short  s_wwide = 0;
 static short  s_wtall = 0;
 
-
 static short  s_left  = 0;
 static short  s_topp  = 0;
 static short  s_wide  = 0;
 static short  s_tall  = 0;
 static short  s_gap   = 4;
 
+static char   s_twin      [8] = { 0, 0, 0, 0, 0, 0, 0, 0};
+static char   s_dwin      [8] = { 0, 0, 0, 0, 0, 0, 0, 0};
 
 char
 DRAW_init               (void)
@@ -74,9 +75,10 @@ DRAW_sizing             (char a_layout)
    s_gap   = 4;
    /*---(horizontal)---------------------*/
    switch (a_layout) {
-   case 't' : s_wwide =   90; break;
-   case 'p' : s_wwide =  250; break;
-   case 'f' : s_wwide =  970; break;
+   case 'h' : s_wwide = 80;   break;
+   case 't' : s_wwide = 80;   break;
+   case 'p' : s_wwide = 80 + (3 * s_gap) + 180; break;
+   case 'f' : s_wwide = 80 + (3 * s_gap) + 880; break;
    }
    s_wide  = 80;
    s_left  = s_wwide - s_wide;
@@ -187,13 +189,15 @@ DRAW_titles             (short a_left, short a_topp, short a_wide, short a_tall,
 {
    short       i           =    0;
    short       x_ftopp     =    0;
+   int         x_line      =   12;
    for (i = 0; i < 8; ++i) {
-      x_ftopp = (8 - i) * (a_tall + a_gap) - 10;
+      if (s_twin [i] <= 0) continue;
+      x_ftopp = (8 - i) * (a_tall + a_gap) - x_line;
       glPushMatrix(); {
          glColor4f (0.00, 0.50, 0.00, 1.00);
          glTranslatef (a_left -  8, x_ftopp, 0);
          if      (g_layout == 'f')  yFONT_print  (s_font,  8, YF_TOPRIG, STACK_line ('-', -1));
-         else if (g_layout == 'p')  yFONT_print  (s_font,  8, YF_TOPRIG, "---terse--------- t ht");
+         else if (g_layout == 'p')  yFONT_print  (s_font,  8, YF_TOPRIG, "-----------terse--- t ht m");
       } glPopMatrix ();
    }
    return 0;
@@ -209,11 +213,12 @@ DRAW_context            (short a_left, short a_topp, short a_wide, short a_tall,
    short       x_left;
    char        x_terse     [LEN_LABEL] = "";
    char        x_type      =  '·';
+   char        x_mark      =  '·';
    short       n           =    0;
-   char        x_dwin      [8] = { 1, 1, 1, 1, 1, 1, 1, 1};
    char        t           [LEN_DESC]  = "";
    short       x_ftopp     =    0;
    short       x_topp, x_bott, x_righ;
+   int         x_line      =   12;
    /*---(header)-------------------------*/
    DEBUG_GRAF   yLOG_enter  (__FUNCTION__);
    /*---(get first)----------------------*/
@@ -221,16 +226,17 @@ DRAW_context            (short a_left, short a_topp, short a_wide, short a_tall,
    /*---(cycle windows)------------------*/
    while (rc > 0) {
       /*---(calculate top)---------------*/
-      x_ftopp = (8 - x_desk) * (a_tall + a_gap) - 10;
+      x_ftopp = (8 - x_desk) * (a_tall + a_gap) - x_line;
       /*---(filter)----------------------*/
       if (x_left >= 0 && x_desk >= 0 ) {
-         if (g_layout != 't' && x_dwin [x_desk] < 7 && x_terse [0] != '·') {
+         if (g_layout != 't' && s_twin [x_desk] < 6) {
             /*---(draw)---------------------*/
+            x_topp = s_twin [x_desk] + 1;
             glPushMatrix(); {
                if (n == 0)      glColor4f (1.00, 1.00, 0.00, 1.00);
                else             glColor4f (0.00, 0.00, 0.00, 1.00);
-               sprintf (t, "%s %c %-2.2s", x_terse, x_type, x_hint);
-               glTranslatef (a_left -  8, x_ftopp - x_dwin [x_desk] * 12, 0);
+               sprintf (t, "%.17s %c %-2.2s %c", x_terse, x_type, x_hint, x_mark);
+               glTranslatef (a_left -  8, x_ftopp - x_topp * x_line, 0);
                switch (g_layout) {
                case 'p' :
                   yFONT_print  (s_font,  8, YF_TOPRIG, t);
@@ -240,9 +246,10 @@ DRAW_context            (short a_left, short a_topp, short a_wide, short a_tall,
                   break;
                }
             } glPopMatrix ();
+            ++(s_dwin [x_desk]);
          }
          /*---(add to dest)--------------*/
-         ++(x_dwin [x_desk]);
+         if (x_desk >= 0)  ++(s_twin [x_desk]);
       }
       /*---(next)------------------------*/
       ++n;
@@ -250,18 +257,24 @@ DRAW_context            (short a_left, short a_topp, short a_wide, short a_tall,
       /*---(done)------------------------*/
    }
    for (x_desk = 0; x_desk <  8; ++x_desk) {
+      x_topp  = (8 - x_desk) * (a_tall + a_gap) - a_gap - 8;
       x_ftopp = (8 - x_desk) * (a_tall + a_gap) - a_tall / 2.0;
-      if (x_dwin [x_desk] > 0)  --(x_dwin [x_desk]);
-      if (x_dwin [x_desk] > 0) {
-         glPushMatrix(); {
+      /*> if (x_dwin [x_desk] > 0)  --(x_dwin [x_desk]);                              <*/
+      if (s_twin [x_desk] > 0) {
+         glPushMatrix  (); {
+            glColor4f (1.00, 1.00, 1.00, 1.00);
+            sprintf (t, "%d", x_desk);
+            glTranslatef  (a_left + a_wide - 4, x_topp,  600);
+            yFONT_print  (s_font,  8, YF_TOPRIG, t);
+         } glPopMatrix ();
+         glPushMatrix  (); {
             glColor4f (0.00, 0.00, 0.00, 1.00);
-            if (x_dwin [x_desk] > 0)  --(x_dwin [x_desk]);
-            sprintf (t, "%d", x_dwin [x_desk]);
+            sprintf (t, "%d", s_twin [x_desk]);
             glTranslatef  (a_left + a_wide / 2.0, x_ftopp,  600);
             yFONT_print  (s_font, 16, YF_MIDCEN, t);
          } glPopMatrix ();
       }
-      if (x_dwin [x_desk] == 0) {
+      if (s_twin [x_desk] == 0) {
          x_topp  = (8 - x_desk) * (a_tall + a_gap);
          x_bott  = x_topp - a_tall;
          x_righ  = a_left + a_wide;
@@ -272,13 +285,6 @@ DRAW_context            (short a_left, short a_topp, short a_wide, short a_tall,
             glVertex3f  (x_righ, x_bott,  400);
             glVertex3f  (a_left, x_bott,  400);
          } glEnd   ();
-         /*> glLineWidth    (1.00);                                                   <* 
-          *> glBegin        (GL_LINES); {                                             <* 
-          *>    glVertex3f  (a_left, x_topp,  650);                                   <* 
-          *>    glVertex3f  (x_righ, x_bott,  650);                                   <* 
-          *>    glVertex3f  (x_righ, x_topp,  650);                                   <* 
-          *>    glVertex3f  (a_left, x_bott,  650);                                   <* 
-          *> } glEnd   ();                                                            <*/
       }
    }
    /*---(complete)-----------------------*/
@@ -293,6 +299,8 @@ DRAW_desktops           (short a_left, short a_topp, short a_wide, short a_tall,
    char        d           =    0;
    short       x_topp      = 8 * (a_gap + a_tall);
    long        x_desk      =    0;
+   int         n           =    0;
+   int         x_line      =   12;
    /*---(header)-------------------------*/
    DEBUG_GRAF   yLOG_enter  (__FUNCTION__);
    /*---(active desktop)-----------------*/
@@ -320,6 +328,19 @@ DRAW_desktops           (short a_left, short a_topp, short a_wide, short a_tall,
          glVertex3f  (a_left + a_wide, x_topp - ((a_tall + a_gap) / 2.0),  550);
       } glEnd();
       glDisable      (GL_LINE_STIPPLE);
+      /*---(context area)----------------*/
+      if (strchr ("pf", g_layout) != NULL) {
+         n = s_twin [d] + 1;
+         if (n > 7)  n = 7;
+         glLineWidth    (0.25);
+         glBegin        (GL_LINE_STRIP); {
+            glVertex3f  (0         , x_topp         ,  500  );
+            glVertex3f  (a_left - 4, x_topp         ,  500  );
+            glVertex3f  (a_left - 4, x_topp - (n * x_line) - 6,  500  );
+            glVertex3f  (0         , x_topp - (n * x_line) - 6,  500  );
+            glVertex3f  (0         , x_topp         ,  500  );
+         } glEnd   ();
+      }
       /*---(next)------------------------*/
       x_topp -= a_tall + a_gap;
       /*---(done)------------------------*/
@@ -350,81 +371,28 @@ DRAW_pager              (short a_left, short a_topp, short a_wide, short a_tall)
    glColor4f (1.00, 0.00, 0.00, 1.00);
    switch (g_layout) {
    case 't' :
-      DRAW_windows  (    5, a_tall, 80, 90, 4);
-      DRAW_desktops (    5, a_tall, 80, 90, 4);
-      DRAW_context  (    5, a_tall, 80, 90, 4);
+      DRAW_windows  (s_left, a_tall, 80, 90, 4);
+      DRAW_desktops (s_left, a_tall, 80, 90, 4);
+      DRAW_context  (s_left, a_tall, 80, 90, 4);
+      DRAW_mask     (s_left, a_tall, 80, 90, 4);
       break;
    case 'p' :
-      DRAW_windows  (  165, a_tall, 80, 90, 4);
-      DRAW_context  (  165, a_tall, 80, 90, 4);
-      DRAW_titles   (  165, a_tall, 80, 90, 4);
-      DRAW_desktops (  165, a_tall, 80, 90, 4);
+      DRAW_windows  (s_left, a_tall, 80, 90, 4);
+      DRAW_context  (s_left, a_tall, 80, 90, 4);
+      DRAW_titles   (s_left, a_tall, 80, 90, 4);
+      DRAW_desktops (s_left, a_tall, 80, 90, 4);
+      DRAW_mask     (s_left, a_tall, 80, 90, 4);
       break;
    case 'f' :
-      DRAW_windows  (  885, a_tall, 80, 90, 4);
-      DRAW_context  (  885, a_tall, 80, 90, 4);
-      DRAW_titles   (  885, a_tall, 80, 90, 4);
-      DRAW_desktops (  885, a_tall, 80, 90, 4);
+      DRAW_windows  (s_left, a_tall, 80, 90, 4);
+      DRAW_context  (s_left, a_tall, 80, 90, 4);
+      DRAW_titles   (s_left, a_tall, 80, 90, 4);
+      DRAW_desktops (s_left, a_tall, 80, 90, 4);
+      DRAW_mask     (s_left, a_tall, 80, 90, 4);
       break;
-   }
-   /*---(force-out)----------------------*/
-   glXSwapBuffers (YX_DISP, YX_BASE);
-   glFlush         ();
-   /*---(complete)-----------------------*/
-   DEBUG_GRAF   yLOG_exit    (__FUNCTION__);
-   return 0;
-}
-
-char
-DRAW_launch             (short a_left, short a_topp, short a_wide, short a_tall)
-{
-   /*---(locals)-----------+-----+-----+-*/
-   char        rc          =    0;
-   char        x_hint      [LEN_SHORT] = "";
-   char        x_desk      =    0;
-   short       x_left, x_topp, x_wide, x_tall;
-   short       x_righ, x_bott;
-   char        x_back      [LEN_TERSE] = "";
-   char        x_pubname   [LEN_LABEL] = "";
-   char        x_terse     [LEN_LABEL] = "";
-   char        x_type      =  '·';
-   int         i           =    0;
-   short       c           =    0;
-   short       n           =    0;
-   short       x, y;
-   /*---(header)-------------------------*/
-   DEBUG_GRAF   yLOG_enter  (__FUNCTION__);
-   /*---(clear)--------------------------*/
-   glClearColor    (0.50, 0.50, 0.50, 0.25);
-   glClear         (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-   /*---(setup view)---------------------*/
-   DEBUG_GRAF   yLOG_note    ("set up the view");
-   glViewport      (0, 0, a_wide, a_tall);
-   glMatrixMode    (GL_PROJECTION);
-   glLoadIdentity  ();
-   glOrtho         (0, a_wide, 0, a_tall, -1000, 1000);
-   glMatrixMode    (GL_MODELVIEW);
-   /*---(prepare)------------------------*/
-   c  = STACK_count ();
-   /*---(launch-view)--------------------*/
-   rc = STACK_by_cursor (YDLST_HEAD, x_hint, &x_desk, &x_left, &x_topp, &x_wide, &x_tall, x_back, x_pubname, x_terse, &x_type);
-   /*---(cycle windows)------------------*/
-   for (i = 0; i < c; ++i) {
-      x = a_left + 20;
-      y = a_topp - 40 - (n * 15);
-      /*> printf ("%3di  %3dx  %3dy\n", i, x, y);                                     <*/
-      /*---(draw)---------------------*/
-      glPushMatrix(); {
-         if (i == 0)      glColor4f (1.00, 1.00, 0.00, 1.00);
-         else             glColor4f (0.00, 0.00, 0.00, 1.00);
-         glTranslatef (x, y, 0);
-         yFONT_print  (s_font,  8, YF_TOPLEF, STACK_line ('-', i));
-      } glPopMatrix ();
-      /*---(next)------------------------*/
-      rc = STACK_by_cursor (YDLST_NEXT, x_hint, &x_desk, &x_left, &x_topp, &x_wide, &x_tall, x_back, x_pubname, x_terse, &x_type);
-      ++n;
-      if (i > 0 && (i + 1) % 5 == 0) ++n;
-      /*---(done)------------------------*/
+   case '-' : case 'h' :
+      DRAW_mask     (s_left, a_tall, 80, 90, 4);
+      break;
    }
    /*---(force-out)----------------------*/
    glXSwapBuffers (YX_DISP, YX_BASE);
@@ -437,10 +405,57 @@ DRAW_launch             (short a_left, short a_topp, short a_wide, short a_tall)
 char
 DRAW_main               (char a_layout)
 {
+   int         x_desk      =    0;
+   for (x_desk = 0; x_desk < 8; ++x_desk) {
+      s_twin [x_desk] = s_dwin [x_desk] = 0;
+   }
    DRAW_pager  (0, s_wtall, s_wwide, s_wtall);
-   /*> if      (a_layout == 'p')  DRAW_pager  (0, s_wtall, s_wwide, s_wtall);         <* 
-    *> else if (a_layout == 't')  DRAW_pager  (0, s_wtall, s_wwide, s_wtall);         <* 
-    *> else                       DRAW_launch (0, s_wtall, s_wwide, s_wtall);         <*/
+   return 0;
+}
+
+char
+DRAW_mask               (short a_left, short a_topp, short a_wide, short a_tall, short a_gap)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   Pixmap      x_bounds;
+   GC          x_gc;
+   short       x_topp      = a_gap;
+   long        x_desk      =    0;
+   long        d           =    0;
+   int         n           =    0;
+   int         x_line      =   12;
+   /*---(header)-------------------------*/
+   DEBUG_GRAF   yLOG_enter    (__FUNCTION__);
+   /*---(active desktop)-----------------*/
+   GET_property (YX_ROOT, 'D', &d, NULL);
+   /*---(prepare)------------------------*/
+   x_bounds  = XCreatePixmap (YX_DISP, YX_BASE, s_wwide, s_wtall, 1);
+   x_gc      = XCreateGC     (YX_DISP, x_bounds, 0, NULL);
+   XSetForeground (YX_DISP, x_gc, 0);
+   XFillRectangle (YX_DISP, x_bounds, x_gc, 0, 0, s_wwide, s_wtall);
+   XSetForeground (YX_DISP, x_gc, 1);
+   if (strchr ("tpf", g_layout) != NULL) {
+      for (x_desk = 0; x_desk < 8; ++x_desk) {
+         if (s_twin [x_desk] > 0 || x_desk == d) {
+            XFillRectangle (YX_DISP, x_bounds, x_gc, a_left, x_topp, a_wide, a_tall);
+         }
+         if (s_twin [x_desk] > 0) {
+            switch (g_layout) {
+            case 'p' : case 'f' :
+               n = s_twin [x_desk] + 1;
+               if (n > 7)  n = 7;
+               XFillRectangle (YX_DISP, x_bounds, x_gc, 0, x_topp, a_left - 4, (n * x_line) + 6);
+               break;
+            }
+         }
+         x_topp += a_tall + a_gap;
+      }
+   }
+   /*---(set mask)-----------------------*/
+   XShapeCombineMask (YX_DISP, YX_BASE, ShapeBounding, 0, 0, x_bounds, ShapeSet);
+   /*---(free)---------------------------*/
+   XFreePixmap (YX_DISP, x_bounds);
+   XFreeGC     (YX_DISP, x_gc);
    return 0;
 }
 

@@ -21,6 +21,7 @@ struct {
    char        r_type;                      /* window use based on title      */
    char        r_terse     [LEN_LABEL];
    char        r_hint      [LEN_SHORT];     /* two-letter hint code           */
+   char        r_mark;                      /* user-marking                   */
    /*---(geometry)----------*/
    char        r_desk;                      /* which desktop                  */
    short       r_left;                      /* leftmost                       */
@@ -61,6 +62,7 @@ stack__clear            (short n)
    s_stack [n].r_type    = '·';
    ystrlcpy (s_stack [n].r_terse  , "·", LEN_LABEL);
    ystrlcpy (s_stack [n].r_hint   , "·", LEN_SHORT);
+   s_stack [n].r_mark    = '·';
    /*---(geometry)----------*/
    s_stack [n].r_desk     = -1;
    s_stack [n].r_left     = -1;
@@ -97,6 +99,7 @@ stack__duplicate        (short a_dst, short a_src)
    s_stack [a_dst].r_type   = s_stack [a_src].r_type;
    ystrlcpy (s_stack [a_dst].r_terse  , s_stack [a_src].r_terse  , LEN_LABEL);
    ystrlcpy (s_stack [a_dst].r_hint   , s_stack [a_src].r_hint   , LEN_SHORT);
+   s_stack [a_dst].r_mark   = s_stack [a_src].r_mark;
    /*---(geometry)----------*/
    s_stack [a_dst].r_desk   = s_stack [a_src].r_desk;
    s_stack [a_dst].r_left   = s_stack [a_src].r_left;
@@ -293,6 +296,118 @@ STACK_by_cursor         (char a_move, char r_hint [LEN_SHORT], char *r_desk, sho
    /*---(normal result)------------------*/
    DEBUG_PROG  yLOG_sexit   (__FUNCTION__);
    return rc;
+}
+
+char
+STACK_by_hint           (char a_hint [LEN_SHORT], char a_act, char a_mark)
+{
+   char        rce         =  -10;
+   char        rc          =    0;
+   int         i           =    0;
+   short       n           =   -1;
+   /*---(header)-------------------------*/
+   DEBUG_CONF  yLOG_enter   (__FUNCTION__);
+   DEBUG_CONF  yLOG_info    ("a_hint"    , a_hint);
+   --rce;  if (a_hint == NULL) {
+      DEBUG_PROG  yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   for (i = 0; i < s_nstack; ++i) {
+      DEBUG_CONF  yLOG_complex ("check"     , "%3d, %s", i, s_stack [i].r_hint);
+      if (strcmp (s_stack [i].r_hint, a_hint) != 0)  continue;
+      DEBUG_CONF  yLOG_note    ("FOUND");
+      n = i;
+      break;
+   }
+   DEBUG_CONF  yLOG_value   ("n"         , n);
+   --rce;  if (n < 0) {
+      DEBUG_PROG  yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   DEBUG_CONF  yLOG_info    ("r_pretty"  , s_stack [n].r_pretty);
+   DEBUG_CONF  yLOG_hex     ("r_winid"   , s_stack [n].r_winid);
+   rc = yX11_win_goto (s_stack [n].r_winid);
+   DEBUG_CONF  yLOG_value   ("wingoto"   , rc);
+   /*---(complete)-----------------------*/
+   DEBUG_PROG  yLOG_exit    (__FUNCTION__);
+   return 0;
+}
+
+char
+STACK_by_name           (char a_name [LEN_LABEL], char a_act, char a_mark)
+{
+   char        rce         =  -10;
+   char        rc          =    0;
+   int         l           =    0;
+   int         i           =    0;
+   short       n           =   -1;
+   /*---(header)-------------------------*/
+   DEBUG_CONF  yLOG_enter   (__FUNCTION__);
+   DEBUG_CONF  yLOG_info    ("a_name"    , a_name);
+   --rce;  if (a_name == NULL) {
+      DEBUG_PROG  yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   l = strlen (a_name);
+   for (i = 0; i < s_nstack; ++i) {
+      DEBUG_CONF  yLOG_complex ("check"     , "%3d, %s", i, s_stack [i].r_terse);
+      if (strncmp (s_stack [i].r_terse, a_name, l) != 0)  continue;
+      DEBUG_CONF  yLOG_note    ("FOUND");
+      n = i;
+      break;
+   }
+   DEBUG_CONF  yLOG_value   ("n"         , n);
+   --rce;  if (n < 0) {
+      DEBUG_PROG  yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   DEBUG_CONF  yLOG_info    ("r_pretty"  , s_stack [n].r_pretty);
+   DEBUG_CONF  yLOG_hex     ("r_winid"   , s_stack [n].r_winid);
+   DEBUG_CONF  yLOG_value   ("a_act"     , a_act);
+   DEBUG_CONF  yLOG_value   ("a_mark"    , a_mark);
+   switch (a_act) {
+   case 'g' :
+      rc = yX11_win_goto (s_stack [n].r_winid);
+      DEBUG_CONF  yLOG_value   ("wingoto"   , rc);
+      break;
+   case 'm' :
+      s_stack [n].r_mark = a_mark;
+      break;
+   }
+   /*---(complete)-----------------------*/
+   DEBUG_PROG  yLOG_exit    (__FUNCTION__);
+   return 0;
+}
+
+char
+STACK_by_system         (void)
+{
+   char        rce         =  -10;
+   char        rc          =    0;
+   int         i           =    0;
+   short       n           =   -1;
+   /*---(header)-------------------------*/
+   DEBUG_CONF  yLOG_enter   (__FUNCTION__);
+   for (i = 0; i < s_nstack; ++i) {
+      DEBUG_CONF  yLOG_complex ("check"     , "%3d, %2d, %s", i, s_stack [i].r_desk, s_stack [i].r_pretty);
+      if (s_stack [i].r_desk  >= 0)  continue;
+      if (strcmp (s_stack [i].r_pretty, "õ··ROOT··") == 0)  continue;
+      DEBUG_CONF  yLOG_note    ("FOUND");
+      n = i;
+      break;
+   }
+   DEBUG_CONF  yLOG_value   ("n"         , n);
+   --rce;  if (n < 0) {
+      DEBUG_PROG  yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   DEBUG_CONF  yLOG_info    ("r_pretty"  , s_stack [n].r_pretty);
+   DEBUG_CONF  yLOG_hex     ("r_winid"   , s_stack [n].r_winid);
+   rc = yX11_win_goto (s_stack [n].r_winid);
+   DEBUG_CONF  yLOG_value   ("wingoto"   , rc);
+   /*---(complete)-----------------------*/
+   DEBUG_PROG  yLOG_exit    (__FUNCTION__);
+   return 0;
 }
 
 
@@ -719,8 +834,8 @@ STACK_pretty            (long a_winid)
 char*
 STACK_line              (char a_type, short n)
 {
-   if (n < 0) sprintf (s_print, "stk ht  --winid--  -fram-  -d ---x ---y ---w ---t  - - -  ht  eterm  bg---- fg  lv -run- ---pub------ ---terse------------ t ht");
-   else       sprintf (s_print, "%3d %-2.2s  %-9.9s  %-6.6x  %2d %4d %4d %4d %4d  %c %c %c  %-2.2s  %5d  %-6.6s %-2.2s  %2d %5d %-12.12s %-20.20s %c %-2.2s", n, s_stack [n].r_hint, s_stack [n].r_pretty, s_stack [n].r_frame, s_stack [n].r_desk, s_stack [n].r_left, s_stack [n].r_topp, s_stack [n].r_wide, s_stack [n].r_tall, s_stack [n].r_locn, s_stack [n].r_scrn, s_stack [n].r_size, s_stack [n].r_hint, s_stack [n].r_eterm, s_stack [n].r_back, s_stack [n].r_fore, s_stack [n].r_lvl, s_stack [n].r_rpid, s_stack [n].r_pubname, s_stack [n].r_terse, s_stack [n].r_type, s_stack [n].r_hint);
+   if (n < 0) sprintf (s_print, "stk ht  winid----  frame-  -d left topp wide tall  G S L  ht  eterm  bg---- fg  lv -run- pubname----- ---terse------------ t ht m");
+   else       sprintf (s_print, "%3d %-2.2s  %-9.9s  %-6.6x  %2d %4d %4d %4d %4d  %c %c %c  %-2.2s  %5d  %-6.6s %-2.2s  %2d %5d %-12.12s %-20.20s %c %-2.2s %c", n, s_stack [n].r_hint, s_stack [n].r_pretty, s_stack [n].r_frame, s_stack [n].r_desk, s_stack [n].r_left, s_stack [n].r_topp, s_stack [n].r_wide, s_stack [n].r_tall, s_stack [n].r_locn, s_stack [n].r_scrn, s_stack [n].r_size, s_stack [n].r_hint, s_stack [n].r_eterm, s_stack [n].r_back, s_stack [n].r_fore, s_stack [n].r_lvl, s_stack [n].r_rpid, s_stack [n].r_pubname, s_stack [n].r_terse, s_stack [n].r_type, s_stack [n].r_hint, s_stack [n].r_mark);
    return s_print;
 }
 
@@ -728,13 +843,42 @@ char
 STACK_list              (void)
 {
    int         i           =    0;
-   printf ("\nwindow inventory (%d)\n", s_nstack);
+   char        x_dwin      [8] = { 0, 0, 0, 0, 0, 0, 0, 0};
+   char        x_heart     [LEN_HUND]  = "";
+   int         v           =    0;
+   int         e           =    0;
+   int         u           =    0;
+   int         l           =    0;
+   /*---(heartbeat)----------------------*/
+   yEXEC_heartbeat (getpid (), 0, NULL, NULL, x_heart);
+   /*---(file header)--------------------*/
+   printf ("#!/usr/local/bin/charybdis --list\n");
+   printf ("## %s %s\n", P_NAMESAKE, P_HERITAGE);
+   printf ("#@ source       åcharybdisæ\n");
+   printf ("#@ subject      åeterm window inventory listæ\n");
+   printf ("#@ heartbeat    å%sæ\n", x_heart);
+   printf ("#@ parse      20åÏ--··Ï-··Ï--------··Ï-----··Ï-·Ï---·Ï---·Ï---·Ï---··Ï·Ï·Ï··Ï-··Ï----··Ï-----·Ï-··Ï-·Ï----·Ï-----------·Ï-------------------·Ï·Ï- Ïæ\n");
+   printf ("#@ titles     20åstk··ht··winid······frame···d··left·topp·wide·tall··G·S·L··ht··eterm··bg·····fg··lv·rpid··pubname······terse················T·ht·Mæ\n");
    for (i = 0; i < s_nstack; ++i) {
-      if (i % 15 == 0)  printf ("\nstk ht  --winid--  -fram-  -d ---x ---y ---w ---t  - - -  ht  eterm  bg---- fg  lv -run- ---pub------ ---terse------------ t ht\n");
+      if (i % 15 == 0)  printf ("\n##  ht  winid----  frame-  -d left topp wide tall  G S L  ht  eterm  bg---- fg  lv rpid- ---pubname-- ---terse------------ T ht M\n");
       if (i %  5 == 0)  printf ("\n");
-      printf ("%3d %-2.2s  %-9.9s  %-6.6x  %2d %4d %4d %4d %4d  %c %c %c  %-2.2s  %5d  %-6.6s %-2.2s  %2d %5d %-12.12s %-20.20s %c %-2.2s\n", i, s_stack [i].r_hint, s_stack [i].r_pretty, s_stack [i].r_frame, s_stack [i].r_desk, s_stack [i].r_left, s_stack [i].r_topp, s_stack [i].r_wide, s_stack [i].r_tall, s_stack [i].r_locn, s_stack [i].r_scrn, s_stack [i].r_size, s_stack [i].r_hint, s_stack [i].r_eterm, s_stack [i].r_back, s_stack [i].r_fore, s_stack [i].r_lvl, s_stack [i].r_rpid, s_stack [i].r_pubname, s_stack [i].r_terse, s_stack [i].r_type, s_stack [i].r_hint);
+      printf ("%3d %-2.2s  %-9.9s  %-6.6x  %2d %4d %4d %4d %4d  %c %c %c  %-2.2s  %5d  %-6.6s %-2.2s  %2d %5d %-12.12s %-20.20s %c %-2.2s %c\n", i, s_stack [i].r_hint, s_stack [i].r_pretty, s_stack [i].r_frame, s_stack [i].r_desk, s_stack [i].r_left, s_stack [i].r_topp, s_stack [i].r_wide, s_stack [i].r_tall, s_stack [i].r_locn, s_stack [i].r_scrn, s_stack [i].r_size, s_stack [i].r_hint, s_stack [i].r_eterm, s_stack [i].r_back, s_stack [i].r_fore, s_stack [i].r_lvl, s_stack [i].r_rpid, s_stack [i].r_pubname, s_stack [i].r_terse, s_stack [i].r_type, s_stack [i].r_hint, s_stack [i].r_mark);
+      if (s_stack [i].r_desk >= 0)  ++(x_dwin [s_stack [i].r_desk]);
+      switch (s_stack [i].r_type) {
+      case 'V' :  ++v;  break;
+      case 'E' :  ++e;  break;
+      case 'U' :  ++u;  break;
+      case 'L' :  ++l;  break;
+      }
    }
-   printf ("\nend-of-list.\n");
+   printf ("\n## count by desktop  ");
+   for (i = 0; i < 8; ++i) {
+      if (x_dwin [i] != 0)   printf ("%1d=%2d  ", i, x_dwin [i]);
+      else                   printf ("%1d=··  " , i);
+   }
+   printf ("\n## count by type     E=%2d, V=%2d, U=%2d, L=%2d\n", e, v, u, l);
+   /*---(file footer)--------------------*/
+   printf ("\n## end-of-report.  %d lines.  done, finito, completare, whimper [Ï´···\n", s_nstack);
    return 0;
 }
 
@@ -791,6 +935,97 @@ STACK_write           (cchar a_name [LEN_PATH])
    /*---(complete)-----------------------*/
    DEBUG_FILE   yLOG_exit    (__FUNCTION__);
    /*---(complete)-----------------------*/
+   return 0;
+}
+
+
+
+/*====================------------------------------------====================*/
+/*===----                       importing file                         ----===*/
+/*====================------------------------------------====================*/
+static void      o___IMPORT_____________o (void) {;}
+
+char
+STACK__handler          (int n, uchar a_verb [LEN_TERSE], char a_exist, void *a_handler)
+{
+   /*---(locals)-----------+-----------+-*/
+   char        rce         =  -10;
+   int         rc          =    0;
+   char        x_hint      [LEN_TERSE] = "";
+   char        x_winid     [LEN_TERSE] = "";
+   long        x_window    =    0;
+   char        x_terse     [LEN_LABEL] = "";
+   char        x_desk      [LEN_SHORT] = "";
+   double      v           =  0.0;
+   /*---(header)-------------------------*/
+   DEBUG_CONF  yLOG_enter   (__FUNCTION__);
+   /*---(dispatch)-----------------------*/
+   DEBUG_CONF  yLOG_point   ("a_verb"     , a_verb);
+   --rce;  if (a_verb == NULL) {
+      DEBUG_CONF  yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   DEBUG_CONF  yLOG_info    ("a_verb"     , a_verb);
+   /*---(read details)-------------------*/
+   rc = yPARSE_scanf (a_verb, "TT-S-------------L"  , x_hint, x_winid, x_desk, x_terse);
+   DEBUG_CONF  yLOG_value   ("scanf"      , rc);
+   if (rc < 0) {
+      DEBUG_CONF  yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   DEBUG_CONF  yLOG_info    ("x_winid"    , x_winid);
+   ystrlcpy (s_stack [s_nstack].r_pretty, x_winid, LEN_TERSE);
+   ystrldchg (x_winid, '·', '0', LEN_TERSE);
+   ystrl2hex (x_winid, &v, LEN_TERSE);
+   DEBUG_CONF  yLOG_info    ("x_winid"    , x_winid);
+   DEBUG_CONF  yLOG_hex     ("v"          , v);
+   s_stack [s_nstack].r_winid = v;
+   ystrlcpy (s_stack [s_nstack].r_hint , x_hint, LEN_SHORT);
+   DEBUG_CONF  yLOG_info    ("x_hint"     , x_hint);
+   DEBUG_CONF  yLOG_info    ("x_desk"     , x_desk);
+   s_stack [s_nstack].r_desk  = atoi (x_desk);
+   ystrlcpy (s_stack [s_nstack].r_terse, x_terse, LEN_LABEL);
+   DEBUG_CONF  yLOG_info    ("x_terse"    , x_terse);
+   ++s_nstack;
+   DEBUG_CONF  yLOG_value   ("s_nstack"   , s_nstack);
+   /*---(complete)-----------------------*/
+   DEBUG_CONF  yLOG_exit    (__FUNCTION__);
+   return 0;
+}
+
+char
+STACK_pull              (cchar a_file [LEN_PATH])
+{
+   /*---(locals)-----------+-----+-----+-*/
+   char        rce         =  -10;
+   char        rc          =    0;
+   /*---(header)-------------------------*/
+   DEBUG_CONF  yLOG_enter   (__FUNCTION__);
+   yURG_msg ('>', "reading word file...");
+   /*---(purge the tables)---------------*/
+   rc = yPARSE_reset_in ();
+   DEBUG_CONF   yLOG_value   ("purge_in"  , rc);
+   /*---(defense)------------------------*/
+   DEBUG_CONF  yLOG_point   ("a_file"     , a_file);
+   --rce;  if (a_file == NULL) {
+      DEBUG_CONF  yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   DEBUG_CONF  yLOG_info    ("a_file"     , a_file);
+   /*---(read all lines)-----------------*/
+   rc = yPARSE_autoread (a_file, NULL, STACK__handler);
+   DEBUG_CONF  yLOG_value   ("read"      , rc);
+   DEBUG_CONF  yLOG_value   ("s_nstack"  , s_nstack);
+   /*---(close)--------------------------*/
+   rc = yPARSE_close ();
+   DEBUG_CONF   yLOG_value   ("close"     , rc);
+   --rce; if (rc < 0) {
+      yURG_err ('f', "yPARSE failed closing configuration file");
+      DEBUG_CONF   yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   /*---(complete)-----------------------*/
+   DEBUG_CONF  yLOG_exit    (__FUNCTION__);
    return 0;
 }
 

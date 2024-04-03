@@ -2,7 +2,9 @@
 
 
 
-char        g_layout  = 'p';
+char        g_layout  = '·';
+char        g_daemon  = 'y';
+char        g_hint    [LEN_LABEL] = "";
 
 
 /*====================------------------------------------====================*/
@@ -45,19 +47,25 @@ PROG_comm          (int a_signal, siginfo_t *a_info, char *a_name, char *a_desc)
       DEBUG_PROG  yLOG_info     ("SIGNAL", "SIGHUP MEANS REFRESH");
       g_layout = 't';
       DRAW_sizing (g_layout);
+      DRAW_main   (g_layout);
       break;
    case  SIGUSR1:
       DEBUG_PROG  yLOG_info     ("SIGNAL", "SIGUSR1 MEANS ...");
       g_layout = 'p';
       DRAW_sizing (g_layout);
+      DRAW_main   (g_layout);
       break;
    case  SIGUSR2:
       DEBUG_PROG  yLOG_info     ("SIGNAL", "SIGUSR2 MEANS ...");
       g_layout = 'f';
       DRAW_sizing (g_layout);
+      DRAW_main   (g_layout);
       break;
    case  SIGALRM:
       DEBUG_PROG  yLOG_info     ("SIGNAL", "SIGALRM MEANS ...");
+      g_layout = '-';
+      DRAW_sizing ('t');
+      DRAW_main   (g_layout);
       break;
    case  SIGTERM:
       DEBUG_PROG  yLOG_info     ("SIGNAL", "SIGTERM means terminate");
@@ -151,10 +159,7 @@ PROG__init              (void)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
-   int         i           =    0;
    char        rc          =    0;
-   int         x_len       =    0;
-   int         x_sid       =    0;
    /*---(logger)-------------------------*/
    DEBUG_PROG   yLOG_enter  (__FUNCTION__);
    /*---(-------)------------------------*/
@@ -183,30 +188,40 @@ PROG__args              (int a_argc, char *a_argv [])
    /*---(begin)------------+-----------+-*/
    DEBUG_PROG   yLOG_enter  (__FUNCTION__);
    /*---(locals)-------------------------*/
-   int         i           = 0;             /* loop iterator -- arguments     */
-   char       *a           = NULL;          /* current argument               */
-   int         x_len       = 0;             /* argument length                */
-   char        two_arg     = 0;
+   int         i           =    0;
+   char       *a           = NULL;
+   char       *b           = NULL;
+   int         x_len       =    0;
+   char        two_arg     =    0;
    /*---(process args)-------------------*/
    DEBUG_ARGS   yLOG_value  ("a_argc"      , a_argc);
    --rce;  for (i = 1; i < a_argc; ++i) {
       a   = a_argv[i];
-      if (i < a_argc - 1) two_arg = 1; else two_arg = 0;
-      x_len = strlen(a);
+      if (i < a_argc - 1)  b = a_argv [i + 1];
+      else                 b = NULL;
+      x_len = strlen (a);
       DEBUG_ARGS   yLOG_bullet (i           , a);
       /*---(skip debugging)--------------*/
       if      (a[0] == '@')                     continue;
       /*---(interactive)-----------------*/
       if      (strcmp (a, "--version"     ) == 0) {
-         printf ("hearth (%s/%s) %s\n", P_VERNUM, __DATE__, P_VERTXT);
+         printf ("charybdis (%s/%s) %s\n", P_VERNUM, __DATE__, P_VERTXT);
          exit (0);
       }
       else if (strcmp (a, "--usage"       ) == 0) { PROG_usage ();  return -1; }
       /*---(overall)---------------------*/
+      else if (strcmp (a, "--hidden"      ) == 0)  g_layout    = 'h';
       else if (strcmp (a, "--thin"        ) == 0)  g_layout    = 't';
       else if (strcmp (a, "--pager"       ) == 0)  g_layout    = 'p';
       else if (strcmp (a, "--full"        ) == 0)  g_layout    = 'f';
+      else if (strcmp (a, "--kill"        ) == 0)  g_layout    = 'K';
       else if (strcmp (a, "--list"        ) == 0)  g_layout    = '-';
+      else if (strcmp (a, "--nodaemon"    ) == 0)  g_daemon    = '-';
+      /*---(hints)-----------------------*/
+      else if (a [0] != '-') {
+         ystrlcpy (g_hint, a, LEN_LABEL);
+         DEBUG_ARGS   yLOG_info   ("g_hint"      , g_hint);
+      }
       /*---(trouble)---------------------*/
       else {
          /*> ystrlcpy (my.tsae, a, LEN_RECD);                                         <*/
@@ -225,12 +240,103 @@ PROG__begin             (void)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
-   char        rc          = 0;
-   /*> int         i           = 0;                                                   <*/
-   /*> tSTAT       s;                                                                 <*/
+   char        rc          =    0;
+   int         x_running   =    0;
+   int         x_pid       =    0;
+   int         x_rpid      =    0;
+   char        n           =    0;
+   long        x_root      =    0;
+   int         l           =    0;
+   char        x_good      =  '-';
    /*---(header)-------------------------*/
    DEBUG_PROG   yLOG_enter  (__FUNCTION__);
-   /*---(signaling)----------------------*/
+   /*---(check for other instances)------*/
+   x_pid  = getpid ();
+   DEBUG_ENVI   yLOG_value   ("x_pid"     , x_pid);
+   x_running  = yEXEC_duplicate ("charybdis", x_pid, &x_rpid);
+   DEBUG_ENVI   yLOG_value   ("x_running" , x_running);
+   --rce;  if (x_running > 0) {
+      DEBUG_ARGS   yLOG_char   ("g_layout"    , g_layout);
+      switch (g_layout) {
+      case 'K' :
+         printf ("charybdis, killing main instance\n");
+         kill (x_rpid, SIGKILL);
+         x_good = 'y';
+         break;
+      case 'h' :
+         printf ("charybdis, switching already running instance to \"hidden\" view\n");
+         kill (x_rpid, SIGALRM);
+         x_good = 'y';
+         break;
+      case 't' :
+         printf ("charybdis, switching already running instance to \"thin\" view\n");
+         kill (x_rpid, SIGHUP);
+         x_good = 'y';
+         break;
+      case 'p' :
+         printf ("charybdis, switching already running instance to \"pager\" view\n");
+         kill (x_rpid, SIGUSR1);
+         x_good = 'y';
+         break;
+      case 'f' :
+         printf ("charybdis, switching already running instance to \"full\" view\n");
+         kill (x_rpid, SIGUSR2);
+         x_good = 'y';
+         break;
+      }
+      if (strcmp (g_hint, "") != 0) {
+         l = strlen (g_hint);
+         if (l == 1) {
+            printf ("charybdis, jumping to desktop %c\n", g_hint [0]);
+            rc = yX11_desk_goto (g_hint [0]);
+            DEBUG_ARGS   yLOG_value  ("desk_goto"   , rc);
+            x_good = 'y';
+         } else if (l == 2) {
+            DEBUG_ARGS   yLOG_info   ("g_hint"      , g_hint);
+            rc = STACK_pull  (FILE_CHARYBDIS);
+            if (strcmp (g_hint, "zz") == 0) {
+               printf ("charybdis, jumping to system window\n");
+               rc = STACK_by_system ();
+               DEBUG_ARGS   yLOG_value  ("by_system"   , rc);
+            } else {
+               printf ("charybdis, jumping to specific window\n");
+               DEBUG_ARGS   yLOG_value  ("pull"        , rc);
+               rc = STACK_by_hint (g_hint, 'g', '-');
+               DEBUG_ARGS   yLOG_value  ("by_hint"     , rc);
+            }
+            if (rc >= 0)  x_good = 'y';
+         } else if (l >= 4 && g_hint [1] == '=')  {
+            printf ("charybdis, creating a mark\n");
+            if (l == 4)  rc = STACK_by_hint (g_hint + 2, 'm', g_hint [0]);
+            else         rc = STACK_by_name (g_hint + 2, 'm', g_hint [0]);
+            DEBUG_ARGS   yLOG_value  ("marking"     , rc);
+            x_good = 'y';
+         } else if (l > 2)  {
+            printf ("charybdis, jumping to named window\n");
+            DEBUG_ARGS   yLOG_info   ("g_hint"      , g_hint);
+            rc = STACK_pull  (FILE_CHARYBDIS);
+            DEBUG_ARGS   yLOG_value  ("pull"        , rc);
+            rc = STACK_by_name (g_hint, 'g', '-');
+            DEBUG_ARGS   yLOG_value  ("by_name"     , rc);
+            x_good = 'y';
+         }
+      }
+      DEBUG_ENVI   yLOG_char    ("x_good"    , x_good);
+      if (x_good != 'y') {
+         printf ("CONFUSION, charybdis already running and no options included\n");
+         DEBUG_ENVI   yLOG_note    ("charybdis is running, nothing requested");
+         DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);
+         return rce;
+      }
+      DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
+      return 1;
+   }
+   if (g_layout == 'K') {
+      printf ("FATAL, can not kill charybdis, no instance is running\n");
+      DEBUG_ENVI   yLOG_note    ("can not kill, no charybdis is running");
+      DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
    /*---(complete)-----------------------*/
    DEBUG_PROG   yLOG_exit   (__FUNCTION__);
    return   0;
@@ -272,28 +378,32 @@ PROG_startup            (int a_argc, char *a_argv [])
    return rc;
 }
 
+
+
+/*====================------------------------------------====================*/
+/*===----                     runtime support                          ----===*/
+/*====================------------------------------------====================*/
+static void      o___RUNTIME____________o (void) {;}
+
 char
-PROG_single        (void)
+PROG_dawn          (void)
 {
-   /*---(locals)-----------+-----+-----+-*/
-   int         rce         =  -10;
-   int         rc          =    0;
-   int         x_running   =    0;
-   int         x_uid       =    0;
+   char        rce         =  -10;
+   char        rc          =    0;
+   int         x_logger    =    0;
    /*---(header)-------------------------*/
-   DEBUG_ENVI   yLOG_enter   (__FUNCTION__);
-   /*---(check for other)----------------*/
-   x_running  = yEXEC_find ("charybdis", NULL);
-   x_running += yEXEC_find ("charybdis_debug", NULL);
-   DEBUG_ENVI   yLOG_value   ("x_running" , x_running);
-   --rce;  if (x_running > 1) {
-      printf ("charybdis already running in pager mode\n");
-      DEBUG_ENVI   yLOG_note    ("charybdis already running in pager mode");
-      DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);
-      return rce;
+   DEBUG_PROG   yLOG_enter    (__FUNCTION__);
+   x_logger = yLOGS_lognum ();
+   DEBUG_PROG   yLOG_value    ("x_logger"  , x_logger);
+   DEBUG_PROG   yLOG_char     ("g_daemon"  , g_daemon);
+   if (g_daemon == 'y') {
+      rc = yEXEC_daemon (x_logger, NULL);
+      DEBUG_PROG   yLOG_value    ("daemon"    , rc);
+      /*> rc = daemon (1, 0);                                                         <*/
+      if (rc != 0) exit (0);
    }
    /*---(complete)------------------------------*/
-   DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
+   DEBUG_PROG   yLOG_exit     (__FUNCTION__);
    return 0;
 }
 

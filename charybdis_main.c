@@ -49,6 +49,10 @@ main               (int a_argc, char *a_argv [])
       DEBUG_PROG   yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
+   if (rc == 1) {
+      DEBUG_PROG   yLOG_exit    (__FUNCTION__);
+      return 1;
+   }
    DEBUG_PROG  yLOG_enter   (__FUNCTION__);
    /*---(gather)-------------------------*/
    yX11_start_unit ();
@@ -62,6 +66,7 @@ main               (int a_argc, char *a_argv [])
       STACK_list ();
       return 0;
    }
+   PROG_dawn ();
    STACK_write    (FILE_CHARYBDIS);
    /*---(prepare visual)-----------------*/
    DRAW_sizing (g_layout);
