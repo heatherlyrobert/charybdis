@@ -44,7 +44,7 @@ short    s_nhint    = 0;
 static void      o___WORKERS____________o (void) {;}
 
 char
-stack__clear            (short n)
+STACK__clear            (short n)
 {
    /*---(window)------------*/
    s_stack [n].r_winid    = -1;
@@ -77,7 +77,7 @@ stack__clear            (short n)
 }
 
 char
-stack__duplicate        (short a_dst, short a_src)
+STACK__duplicate        (short a_dst, short a_src)
 {
    /*---(header)-------------------------*/
    DEBUG_PROG  yLOG_senter  (__FUNCTION__);
@@ -125,7 +125,7 @@ char
 STACK_purge             (void)
 {
    int         i           =    0;
-   for (i = 0; i < LEN_HUND; ++i)  stack__clear (i);
+   for (i = 0; i < LEN_HUND; ++i)  STACK__clear (i);
    s_nstack = 0;
    s_nhint  = 0;
    return 0;
@@ -441,7 +441,7 @@ STACK_remove            (short n)
    /*---(pull entries down)--------------*/
    for (i = 0; i < s_nstack; ++i) {
       if (i <= n)  continue;
-      stack__duplicate (i - 1, i);
+      STACK__duplicate (i - 1, i);
    }
    /*---(increment counter)--------------*/
    --s_nstack;
@@ -475,10 +475,10 @@ STACK__insert           (short n)
    /*---(pull entries up)----------------*/
    for (i = s_nstack - 1; i >= 0; --i) {
       if (i < n)  continue;
-      stack__duplicate (i + 1, i);
+      STACK__duplicate (i + 1, i);
    }
    /*---(clear new entry)----------------*/
-   stack__clear (n);
+   STACK__clear (n);
    /*---(increment counter)--------------*/
    ++s_nstack;
    DEBUG_PROG  yLOG_value   ("s_nstack"  , s_nstack);
@@ -518,7 +518,7 @@ STACK__copy             (short a_from, short a_to)
    }
    /*---(copy to new location)-----------*/
    DEBUG_PROG  yLOG_note    ("copy to new location");
-   stack__duplicate (a_to, a_from);
+   STACK__duplicate (a_to, a_from);
    /*---(complete)-----------------------*/
    DEBUG_PROG  yLOG_exit    (__FUNCTION__);
    return 0;
@@ -548,7 +548,7 @@ STACK_add               (char a_type, long a_winid)
    DEBUG_PROG  yLOG_value   ("s_nstack"  , s_nstack);
    --rce;  if (a_type == 'y') {
       DEBUG_PROG  yLOG_note    ("primary window id add");
-      stack__clear (s_nstack);
+      STACK__clear (s_nstack);
       s_stack [s_nstack].r_winid = a_winid;
       ystrl4hex ((double) s_stack [s_nstack].r_winid, t, 4, 'x', LEN_LABEL);
       ystrldchg (t, '0', '·', LEN_LABEL);
@@ -591,7 +591,7 @@ STACK_push_top          (long a_winid, long a_frame)
       DEBUG_PROG  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
-   rc = stack__clear (0);
+   rc = STACK__clear (0);
    DEBUG_PROG  yLOG_value   ("clear"     , rc);
    --rce;  if (rc < 0) {
       rc = STACK_remove (0);

@@ -34,6 +34,7 @@ main               (int a_argc, char *a_argv [])
    long                   x_prev   =   -1; 
    int         x_loop      =    0;
    int         x_delay     =   -1;
+   char        x_draw      =  '-';
    /*---(preprare)-----------------------*/
    rc = PROG_urgents (a_argc, a_argv );
    DEBUG_PROG   yLOG_value   ("urgents"   , rc);
@@ -146,6 +147,7 @@ main               (int a_argc, char *a_argv [])
          }
          GET_property (YX_ROOT, 'A', &x_curr, NULL);
          STACK_restack (x_curr, -1);
+         x_draw = 'y';
       }
       /*> if (x_loop > 0 && x_loop % 10 == 0)  GET_update (x_root, x_loop);           <*/
       THEIA_pull     (FILE_THEIA);
@@ -164,7 +166,8 @@ main               (int a_argc, char *a_argv [])
       if (x_delay >= 0)  --x_delay;
       /*> if (x_loop > 0 && x_loop % 10 == 0) { STACK_context  (0); ++c; }            <*/
       /*> if (c > cs)  DRAW_main  (0, x_wtall, x_wwide, x_wtall);                     <*/
-      if (c > cs)  DRAW_main  (g_layout);
+      if (c > cs || x_draw == 'y')  DRAW_main  (g_layout);
+      x_draw = '-';
       STACK_write    (FILE_CHARYBDIS);
       cs = c;
       /*> STACK_list     ();                                                          <*/

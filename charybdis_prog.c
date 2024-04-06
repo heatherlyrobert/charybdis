@@ -38,52 +38,6 @@ PROG_version            (void)
    return verstring;
 }
 
-void             /* [------] receive signals ---------------------------------*/
-PROG_comm          (int a_signal, siginfo_t *a_info, char *a_name, char *a_desc)
-{
-   /*---(catch)--------------------------*/
-   switch (a_signal) {
-   case  SIGHUP:
-      DEBUG_PROG  yLOG_info     ("SIGNAL", "SIGHUP MEANS REFRESH");
-      g_layout = 't';
-      DRAW_sizing (g_layout);
-      DRAW_main   (g_layout);
-      break;
-   case  SIGUSR1:
-      DEBUG_PROG  yLOG_info     ("SIGNAL", "SIGUSR1 MEANS ...");
-      g_layout = 'p';
-      DRAW_sizing (g_layout);
-      DRAW_main   (g_layout);
-      break;
-   case  SIGUSR2:
-      DEBUG_PROG  yLOG_info     ("SIGNAL", "SIGUSR2 MEANS ...");
-      g_layout = 'f';
-      DRAW_sizing (g_layout);
-      DRAW_main   (g_layout);
-      break;
-   case  SIGALRM:
-      DEBUG_PROG  yLOG_info     ("SIGNAL", "SIGALRM MEANS ...");
-      g_layout = '-';
-      DRAW_sizing ('t');
-      DRAW_main   (g_layout);
-      break;
-   case  SIGTERM:
-      DEBUG_PROG  yLOG_info     ("SIGNAL", "SIGTERM means terminate");
-      break;
-   case  SIGSEGV:
-      DEBUG_PROG  yLOG_info     ("SIGNAL", "SIGSEGV means blew up");
-      break;
-   case  SIGABRT:
-      DEBUG_PROG  yLOG_info     ("SIGNAL", "SIGABRT means blew up");
-      break;
-   default      :
-      DEBUG_PROG  yLOG_info     ("SIGNAL", "unknown signal recieved");
-      break;
-   }
-   /*---(complete)-----------------------*/
-   return;
-}
-
 
 
 /*====================------------------------------------====================*/
@@ -166,7 +120,7 @@ PROG__init              (void)
    STACK_init  ();
    THEIA_init  ();
    /*---(signals)-------------------------------*/
-   yEXEC_signal (YEXEC_SOFT, YEXEC_YES, YEXEC_NO, PROG_comm, "stdsig");
+   yEXEC_signal (YEXEC_SOFT, YEXEC_YES, YEXEC_NO, REQS_comm, "stdsig");
    DEBUG_ENVI   yLOG_value   ("signals"   , rc);
    --rce;  if (rc < 0) {
       /*> printf ("hestia sigals could not be set properly\n");                       <*/
@@ -241,105 +195,106 @@ PROG__begin             (void)
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
    char        rc          =    0;
-   int         x_running   =    0;
-   int         x_pid       =    0;
-   int         x_rpid      =    0;
-   char        n           =    0;
-   long        x_root      =    0;
-   int         l           =    0;
-   char        x_good      =  '-';
+   /*> int         x_running   =    0;                                                <* 
+    *> int         x_pid       =    0;                                                <* 
+    *> int         x_rpid      =    0;                                                <* 
+    *> char        n           =    0;                                                <* 
+    *> long        x_root      =    0;                                                <* 
+    *> int         l           =    0;                                                <* 
+    *> char        x_good      =  '-';                                                <*/
    /*---(header)-------------------------*/
    DEBUG_PROG   yLOG_enter  (__FUNCTION__);
    /*---(check for other instances)------*/
-   x_pid  = getpid ();
-   DEBUG_ENVI   yLOG_value   ("x_pid"     , x_pid);
-   x_running  = yEXEC_duplicate ("charybdis", x_pid, &x_rpid);
-   DEBUG_ENVI   yLOG_value   ("x_running" , x_running);
-   --rce;  if (x_running > 0) {
-      DEBUG_ARGS   yLOG_char   ("g_layout"    , g_layout);
-      switch (g_layout) {
-      case 'K' :
-         printf ("charybdis, killing main instance\n");
-         kill (x_rpid, SIGKILL);
-         x_good = 'y';
-         break;
-      case 'h' :
-         printf ("charybdis, switching already running instance to \"hidden\" view\n");
-         kill (x_rpid, SIGALRM);
-         x_good = 'y';
-         break;
-      case 't' :
-         printf ("charybdis, switching already running instance to \"thin\" view\n");
-         kill (x_rpid, SIGHUP);
-         x_good = 'y';
-         break;
-      case 'p' :
-         printf ("charybdis, switching already running instance to \"pager\" view\n");
-         kill (x_rpid, SIGUSR1);
-         x_good = 'y';
-         break;
-      case 'f' :
-         printf ("charybdis, switching already running instance to \"full\" view\n");
-         kill (x_rpid, SIGUSR2);
-         x_good = 'y';
-         break;
-      }
-      if (strcmp (g_hint, "") != 0) {
-         l = strlen (g_hint);
-         if (l == 1) {
-            printf ("charybdis, jumping to desktop %c\n", g_hint [0]);
-            rc = yX11_desk_goto (g_hint [0]);
-            DEBUG_ARGS   yLOG_value  ("desk_goto"   , rc);
-            x_good = 'y';
-         } else if (l == 2) {
-            DEBUG_ARGS   yLOG_info   ("g_hint"      , g_hint);
-            rc = STACK_pull  (FILE_CHARYBDIS);
-            if (strcmp (g_hint, "zz") == 0) {
-               printf ("charybdis, jumping to system window\n");
-               rc = STACK_by_system ();
-               DEBUG_ARGS   yLOG_value  ("by_system"   , rc);
-            } else {
-               printf ("charybdis, jumping to specific window\n");
-               DEBUG_ARGS   yLOG_value  ("pull"        , rc);
-               rc = STACK_by_hint (g_hint, 'g', '-');
-               DEBUG_ARGS   yLOG_value  ("by_hint"     , rc);
-            }
-            if (rc >= 0)  x_good = 'y';
-         } else if (l >= 4 && g_hint [1] == '=')  {
-            printf ("charybdis, creating a mark\n");
-            if (l == 4)  rc = STACK_by_hint (g_hint + 2, 'm', g_hint [0]);
-            else         rc = STACK_by_name (g_hint + 2, 'm', g_hint [0]);
-            DEBUG_ARGS   yLOG_value  ("marking"     , rc);
-            x_good = 'y';
-         } else if (l > 2)  {
-            printf ("charybdis, jumping to named window\n");
-            DEBUG_ARGS   yLOG_info   ("g_hint"      , g_hint);
-            rc = STACK_pull  (FILE_CHARYBDIS);
-            DEBUG_ARGS   yLOG_value  ("pull"        , rc);
-            rc = STACK_by_name (g_hint, 'g', '-');
-            DEBUG_ARGS   yLOG_value  ("by_name"     , rc);
-            x_good = 'y';
-         }
-      }
-      DEBUG_ENVI   yLOG_char    ("x_good"    , x_good);
-      if (x_good != 'y') {
-         printf ("CONFUSION, charybdis already running and no options included\n");
-         DEBUG_ENVI   yLOG_note    ("charybdis is running, nothing requested");
-         DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);
-         return rce;
-      }
-      DEBUG_ENVI   yLOG_exit    (__FUNCTION__);
-      return 1;
-   }
-   if (g_layout == 'K') {
-      printf ("FATAL, can not kill charybdis, no instance is running\n");
-      DEBUG_ENVI   yLOG_note    ("can not kill, no charybdis is running");
-      DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);
-      return rce;
-   }
+   rc = REQS_handler (g_layout, g_hint);
+   /*> x_pid  = getpid ();                                                                    <* 
+    *> DEBUG_ENVI   yLOG_value   ("x_pid"     , x_pid);                                       <* 
+    *> x_running  = yEXEC_duplicate ("charybdis", x_pid, &x_rpid);                            <* 
+    *> DEBUG_ENVI   yLOG_value   ("x_running" , x_running);                                   <* 
+    *> --rce;  if (x_running > 0) {                                                           <* 
+    *>    DEBUG_ARGS   yLOG_char   ("g_layout"    , g_layout);                                <* 
+    *>    switch (g_layout) {                                                                 <* 
+    *>    case 'K' :                                                                          <* 
+    *>       printf ("charybdis, killing main instance\n");                                   <* 
+    *>       kill (x_rpid, SIGKILL);                                                          <* 
+    *>       x_good = 'y';                                                                    <* 
+    *>       break;                                                                           <* 
+    *>    case 'h' :                                                                          <* 
+    *>       printf ("charybdis, switching already running instance to \"hidden\" view\n");   <* 
+    *>       kill (x_rpid, SIGALRM);                                                          <* 
+    *>       x_good = 'y';                                                                    <* 
+    *>       break;                                                                           <* 
+    *>    case 't' :                                                                          <* 
+    *>       printf ("charybdis, switching already running instance to \"thin\" view\n");     <* 
+    *>       kill (x_rpid, SIGHUP);                                                           <* 
+    *>       x_good = 'y';                                                                    <* 
+    *>       break;                                                                           <* 
+    *>    case 'p' :                                                                          <* 
+    *>       printf ("charybdis, switching already running instance to \"pager\" view\n");    <* 
+    *>       kill (x_rpid, SIGUSR1);                                                          <* 
+    *>       x_good = 'y';                                                                    <* 
+    *>       break;                                                                           <* 
+    *>    case 'f' :                                                                          <* 
+    *>       printf ("charybdis, switching already running instance to \"full\" view\n");     <* 
+    *>       kill (x_rpid, SIGUSR2);                                                          <* 
+    *>       x_good = 'y';                                                                    <* 
+    *>       break;                                                                           <* 
+    *>    }                                                                                   <* 
+    *>    if (strcmp (g_hint, "") != 0) {                                                     <* 
+    *>       l = strlen (g_hint);                                                             <* 
+    *>       if (l == 1) {                                                                    <* 
+    *>          printf ("charybdis, jumping to desktop %c\n", g_hint [0]);                    <* 
+    *>          rc = yX11_desk_goto (g_hint [0]);                                             <* 
+    *>          DEBUG_ARGS   yLOG_value  ("desk_goto"   , rc);                                <* 
+    *>          x_good = 'y';                                                                 <* 
+    *>       } else if (l == 2) {                                                             <* 
+    *>          DEBUG_ARGS   yLOG_info   ("g_hint"      , g_hint);                            <* 
+    *>          rc = STACK_pull  (FILE_CHARYBDIS);                                            <* 
+    *>          if (strcmp (g_hint, "zz") == 0) {                                             <* 
+    *>             printf ("charybdis, jumping to system window\n");                          <* 
+    *>             rc = STACK_by_system ();                                                   <* 
+    *>             DEBUG_ARGS   yLOG_value  ("by_system"   , rc);                             <* 
+    *>          } else {                                                                      <* 
+    *>             printf ("charybdis, jumping to specific window\n");                        <* 
+    *>             DEBUG_ARGS   yLOG_value  ("pull"        , rc);                             <* 
+    *>             rc = STACK_by_hint (g_hint, 'g', '-');                                     <* 
+    *>             DEBUG_ARGS   yLOG_value  ("by_hint"     , rc);                             <* 
+    *>          }                                                                             <* 
+    *>          if (rc >= 0)  x_good = 'y';                                                   <* 
+    *>       } else if (l >= 4 && g_hint [1] == '=')  {                                       <* 
+    *>          printf ("charybdis, creating a mark\n");                                      <* 
+    *>          if (l == 4)  rc = STACK_by_hint (g_hint + 2, 'm', g_hint [0]);                <* 
+    *>          else         rc = STACK_by_name (g_hint + 2, 'm', g_hint [0]);                <* 
+    *>          DEBUG_ARGS   yLOG_value  ("marking"     , rc);                                <* 
+    *>          x_good = 'y';                                                                 <* 
+    *>       } else if (l > 2)  {                                                             <* 
+    *>          printf ("charybdis, jumping to named window\n");                              <* 
+    *>          DEBUG_ARGS   yLOG_info   ("g_hint"      , g_hint);                            <* 
+    *>          rc = STACK_pull  (FILE_CHARYBDIS);                                            <* 
+    *>          DEBUG_ARGS   yLOG_value  ("pull"        , rc);                                <* 
+    *>          rc = STACK_by_name (g_hint, 'g', '-');                                        <* 
+    *>          DEBUG_ARGS   yLOG_value  ("by_name"     , rc);                                <* 
+    *>          x_good = 'y';                                                                 <* 
+    *>       }                                                                                <* 
+    *>    }                                                                                   <* 
+    *>    DEBUG_ENVI   yLOG_char    ("x_good"    , x_good);                                   <* 
+    *>    if (x_good != 'y') {                                                                <* 
+    *>       printf ("CONFUSION, charybdis already running and no options included\n");       <* 
+    *>       DEBUG_ENVI   yLOG_note    ("charybdis is running, nothing requested");           <* 
+    *>       DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);                                   <* 
+    *>       return rce;                                                                      <* 
+    *>    }                                                                                   <* 
+    *>    DEBUG_ENVI   yLOG_exit    (__FUNCTION__);                                           <* 
+    *>    return 1;                                                                           <* 
+    *> }                                                                                      <* 
+    *> if (g_layout == 'K') {                                                                 <* 
+    *>    printf ("FATAL, can not kill charybdis, no instance is running\n");                 <* 
+    *>    DEBUG_ENVI   yLOG_note    ("can not kill, no charybdis is running");                <* 
+    *>    DEBUG_ENVI   yLOG_exitr   (__FUNCTION__, rce);                                      <* 
+    *>    return rce;                                                                         <* 
+    *> }                                                                                      <*/
    /*---(complete)-----------------------*/
    DEBUG_PROG   yLOG_exit   (__FUNCTION__);
-   return   0;
+   return rc;
 }
 
 char

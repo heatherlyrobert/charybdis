@@ -84,7 +84,7 @@ DRAW_sizing             (char a_layout)
    s_left  = s_wwide - s_wide;
    /*---(resize)-------------------------*/
    if (s_exist == '-') {
-      yX11_start ("charybdis", s_wwide, s_wtall, YX_HIDDEN, YX_FIXED, YX_SILENT);
+      yX11_start (P_ONELINE, s_wwide, s_wtall, YX_HIDDEN, YX_FIXED, YX_SILENT);
    } else {
       yX11_resize (s_wwide, s_wtall);
    }

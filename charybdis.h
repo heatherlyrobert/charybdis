@@ -46,8 +46,8 @@
 /*········· ··········· ´·····························´········································*/
 #define     P_VERMAJOR  "0.--, prototyping"
 #define     P_VERMINOR  "0.3-, working but a little unpretty ;)"
-#define     P_VERNUM    "0.3f"
-#define     P_VERTXT    "improved signals and sizing, movement by hints and names"
+#define     P_VERNUM    "0.3g"
+#define     P_VERTXT    "looking pretty great, handles well enough for demo"
 /*········· ··········· ´·····························´········································*/
 #define     P_PRIORITY  "direct, simple, brief, vigorous, and lucid (h.w. fowler)"
 #define     P_PRINCIPAL "[grow a set] and build your wings on the way down (r. bradbury)"
@@ -201,6 +201,8 @@ char        LOOP_end                (void);
 /*---(done)-----------------*/
 
 
+void        REQS_comm               (int a_signal, siginfo_t *a_info, char *a_name, char *a_desc);
+char        REQS_handler            (char a_layout, char a_hint [LEN_LABEL]);
 
 
 #endif
