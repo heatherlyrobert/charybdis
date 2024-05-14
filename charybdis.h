@@ -15,7 +15,7 @@
 #define     P_PURPOSE   "provide real-time window location and stacking data"
 /*········· ··········· ´·····························´········································*/
 #define     P_NAMESAKE  "charybdis-adialeiptos (unceasing)"
-#define     P_PRONOUNCE "kaa·rihb·dihs"
+#define     P_PRONOUNCE "kah·rihb·dihs ah·dee·uh·lehp·tohs"
 #define     P_HERITAGE  "sea-swallowing, ship-killing whirlpool in the straits of messina"
 #define     P_BRIEFLY   "ship-killing whirlpool"
 #define     P_IMAGERY   "gigantic sucking vortex of water surrounded by a ring of sharp teeth"
@@ -46,8 +46,8 @@
 /*········· ··········· ´·····························´········································*/
 #define     P_VERMAJOR  "0.--, prototyping"
 #define     P_VERMINOR  "0.3-, working but a little unpretty ;)"
-#define     P_VERNUM    "0.3g"
-#define     P_VERTXT    "looking pretty great, handles well enough for demo"
+#define     P_VERNUM    "0.3h"
+#define     P_VERTXT    "catch-up on some /proc and other run-time vulnerabilities"
 /*········· ··········· ´·····························´········································*/
 #define     P_PRIORITY  "direct, simple, brief, vigorous, and lucid (h.w. fowler)"
 #define     P_PRINCIPAL "[grow a set] and build your wings on the way down (r. bradbury)"
@@ -91,7 +91,9 @@
 
 extern      char        unit_answer [LEN_RECD];
 extern      char        g_layout;
+extern      char        g_scope;
 extern      char        g_daemon;
+extern      char        g_draw;
 
 
 
@@ -186,6 +188,8 @@ char        DRAW_sizing             (char a_layout);
 char        DRAW_windows            (short a_left, short a_topp, short a_wide, short a_tall, short a_gap);
 char        DRAW_context            (short a_left, short a_topp, short a_wide, short a_tall, short a_gap);
 char        DRAW_desktops           (short a_left, short a_topp, short a_wide, short a_tall, short a_gap);
+/*---(driver)---------------*/
+char        DRAW__preparation       (char r_dwin [LEN_TERSE], char r_twin [LEN_TERSE]);
 char        DRAW_pager              (short a_left, short a_topp, short a_wide, short a_tall);
 char        DRAW_main               (char a_layout);
 char        DRAW_mask               (short a_left, short a_topp, short a_wide, short a_tall, short a_gap);
@@ -202,7 +206,7 @@ char        LOOP_end                (void);
 
 
 void        REQS_comm               (int a_signal, siginfo_t *a_info, char *a_name, char *a_desc);
-char        REQS_handler            (char a_layout, char a_hint [LEN_LABEL]);
+char        REQS_handler            (char a_layout, char a_scope, char a_hint [LEN_LABEL]);
 
 
 #endif
