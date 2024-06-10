@@ -113,6 +113,7 @@ REQS_handler            (char a_layout, char a_scope, char a_hint [LEN_LABEL])
    }
    /*---(single instance)----------------*/
    if (x_running == 0) {
+      printf ("charybdis, fresh instance launching\n");
       DEBUG_PROG   yLOG_exit   (__FUNCTION__);
       return 0;
    }

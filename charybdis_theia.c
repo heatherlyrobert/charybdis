@@ -79,7 +79,7 @@ THEIA_pull              (cchar a_file [LEN_PATH])
    char        rc          =    0;
    /*---(header)-------------------------*/
    DEBUG_CONF  yLOG_enter   (__FUNCTION__);
-   yURG_msg ('>', "reading word file...");
+   /*> yURG_msg ('>', "reading word file...");                                        <*/
    /*---(purge the tables)---------------*/
    rc = yPARSE_reset_in ();
    DEBUG_CONF   yLOG_value   ("purge_in"  , rc);

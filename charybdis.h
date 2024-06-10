@@ -46,8 +46,8 @@
 /*········· ··········· ´·····························´········································*/
 #define     P_VERMAJOR  "0.--, prototyping"
 #define     P_VERMINOR  "0.3-, working but a little unpretty ;)"
-#define     P_VERNUM    "0.3h"
-#define     P_VERTXT    "catch-up on some /proc and other run-time vulnerabilities"
+#define     P_VERNUM    "0.3i"
+#define     P_VERTXT    "updated makefile to zeno_make and removed spurious message about reading data"
 /*········· ··········· ´·····························´········································*/
 #define     P_PRIORITY  "direct, simple, brief, vigorous, and lucid (h.w. fowler)"
 #define     P_PRINCIPAL "[grow a set] and build your wings on the way down (r. bradbury)"
